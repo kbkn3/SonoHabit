@@ -5,7 +5,7 @@ import SwiftData
 final class RecordingInfo {
     var fileName: String
     var displayName: String
-    var createdAt: Date
+    var recordedAt: Date
     var filePath: String
     var duration: Double
     var fileSize: Int64
@@ -16,16 +16,17 @@ final class RecordingInfo {
     var practiceItem: PracticeItem?
     
     init(
-        fileName: String,
-        displayName: String,
+        fileName: String = "",
+        displayName: String = "",
         filePath: String,
+        recordedAt: Date = Date(),
         duration: Double = 0,
         fileSize: Int64 = 0,
         notes: String? = nil
     ) {
         self.fileName = fileName
         self.displayName = displayName
-        self.createdAt = Date()
+        self.recordedAt = recordedAt
         self.filePath = filePath
         self.duration = duration
         self.fileSize = fileSize

@@ -50,7 +50,7 @@ struct ItemDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding()
                 } else {
-                    ForEach(item.recordings.sorted(by: { $0.createdAt > $1.createdAt })) { recording in
+                    ForEach(item.recordings.sorted(by: { $0.recordedAt > $1.recordedAt })) { recording in
                         NavigationLink {
                             Text("録音詳細（後で実装）: \(recording.displayName)")
                         } label: {
@@ -60,7 +60,7 @@ struct ItemDetailView: View {
                                 
                                 HStack {
                                     Label(
-                                        recording.createdAt.formatted(date: .abbreviated, time: .shortened),
+                                        recording.recordedAt.formatted(date: .abbreviated, time: .shortened),
                                         systemImage: "calendar"
                                     )
                                     .font(.caption)
@@ -160,7 +160,7 @@ struct ItemDetailView: View {
     
     private func deleteRecordings(offsets: IndexSet) {
         withAnimation {
-            let sortedRecordings = item.recordings.sorted(by: { $0.createdAt > $1.createdAt })
+            let sortedRecordings = item.recordings.sorted(by: { $0.recordedAt > $1.recordedAt })
             for index in offsets {
                 modelContext.delete(sortedRecordings[index])
             }

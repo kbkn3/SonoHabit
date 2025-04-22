@@ -22,8 +22,7 @@ struct ContentView: View {
             .tag(0)
             
             NavigationStack {
-                Text("録音リスト（後で実装）")
-                    .navigationTitle("録音")
+                RecordingListView()
             }
             .tabItem {
                 Label("録音", systemImage: "mic")
