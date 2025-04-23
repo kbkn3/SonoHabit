@@ -8,6 +8,9 @@
 import SwiftUI
 import SwiftData
 
+// Custom Views
+import SwiftUI
+
 struct ContentView: View {
     @State private var selectedTab = 0
     
@@ -30,8 +33,7 @@ struct ContentView: View {
             .tag(1)
             
             NavigationStack {
-                Text("設定（後で実装）")
-                    .navigationTitle("設定")
+                SettingsTabView()
             }
             .tabItem {
                 Label("設定", systemImage: "gear")
@@ -41,7 +43,34 @@ struct ContentView: View {
     }
 }
 
+// このビューを同じファイルに追加して中間層とします
+struct SettingsTabView: View {
+    @State private var navigateToSettings = false
+    
+    var body: some View {
+        VStack {
+            Text("設定")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .padding()
+            
+            Form {
+                Section {
+                    Button("設定を開く") {
+                        navigateToSettings = true
+                    }
+                    
+                    Button("アプリについて") {
+                        // アプリについて画面は今後実装
+                    }
+                }
+            }
+        }
+        .navigationTitle("設定")
+    }
+}
+
 #Preview {
     ContentView()
-        .modelContainer(for: [PracticeMenu.self, PracticeItem.self], inMemory: true)
+        .modelContainer(for: [PracticeMenu.self, PracticeItem.self, UserSettings.self], inMemory: true)
 }
