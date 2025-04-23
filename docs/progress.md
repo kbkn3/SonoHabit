@@ -52,3 +52,17 @@
   - 通常のクリック音（click.wav, woodblock.wav, bongo.wav）
   - アクセント音（click_accent.wav, woodblock_accent.wav, bongo_accent.wav）
   - メトロノームエンジンとの連携を確認
+
+## 2024-04-24
+
+- 設定画面とContentViewの連携を改善
+  - ContentViewのタブ構造を見直し
+  - SettingsTabViewを中間層として実装
+  - モーダル表示（sheet）による設定画面とアプリ情報画面の表示
+  - プレースホルダー実装（SettingsViewPlaceholder, AboutViewPlaceholder）の追加
+  - 実際のSettingsViewやAboutViewとの連携はプロジェクト構造上の問題があるため、プレースホルダーで代替
+
+- 今後の実装予定
+  - CloudKit連携の実装
+  - UIの最適化とユーザーフィードバックの改善
+  - プロジェクト構造の見直しと整理
