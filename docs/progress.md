@@ -44,3 +44,11 @@
   - 音源ファイル（メトロノーム音など）の追加
   - CloudKit連携の実装
   - UIの最適化とユーザーフィードバックの改善
+
+## 2024-04-23
+
+- メトロノーム用音源ファイルの追加
+  - Resources/Sounds/Metronomeディレクトリに各種音源を追加
+  - 通常のクリック音（click.wav, woodblock.wav, bongo.wav）
+  - アクセント音（click_accent.wav, woodblock_accent.wav, bongo_accent.wav）
+  - メトロノームエンジンとの連携を確認
