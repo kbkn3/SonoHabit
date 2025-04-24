@@ -66,61 +66,15 @@ struct SettingsTabView: View {
             .navigationTitle("設定")
             .sheet(isPresented: $navigateToSettings) {
                 NavigationView {
-                    SettingsViewPlaceholder()
+                    SettingsView()
                 }
             }
             .sheet(isPresented: $navigateToAbout) {
                 NavigationView {
-                    AboutViewPlaceholder()
+                    AboutView()
                 }
             }
         }
-    }
-}
-
-// プレースホルダービュー
-struct SettingsViewPlaceholder: View {
-    var body: some View {
-        Text("設定画面（開発中）")
-            .navigationTitle("設定")
-    }
-}
-
-// プレースホルダービュー
-struct AboutViewPlaceholder: View {
-    var body: some View {
-        List {
-            Section {
-                VStack(spacing: 20) {
-                    Image(systemName: "music.note.list")
-                        .font(.system(size: 60))
-                        .foregroundColor(.accentColor)
-                    
-                    Text("SonoHabit")
-                        .font(.title)
-                        .fontWeight(.bold)
-                    
-                    Text("バージョン 1.0.0")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-            }
-            
-            Section(header: Text("アプリについて")) {
-                Text("SonoHabitは楽器演奏練習をサポートするためのアプリです。メトロノーム機能、録音機能、練習メニュー管理機能を提供し、効率的な練習をサポートします。")
-                    .font(.body)
-            }
-            
-            Section(header: Text("機能")) {
-                Label("練習メニュー管理", systemImage: "list.bullet")
-                Label("メトロノーム", systemImage: "metronome")
-                Label("録音と再生", systemImage: "mic")
-                Label("自己評価", systemImage: "star")
-            }
-        }
-        .navigationTitle("アプリについて")
     }
 }
 

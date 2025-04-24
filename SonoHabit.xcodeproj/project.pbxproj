@@ -29,22 +29,9 @@
 		374ACBBD2DB2D00F0082B1EC /* SonoHabitUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SonoHabitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		3727C5122DB6A18700D0FD39 /* Exceptions for "SonoHabit" folder in "SonoHabit" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				AppSettings.plist,
-			);
-			target = 374ACBA12DB2D00E0082B1EC /* SonoHabit */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		374ACBA42DB2D00E0082B1EC /* SonoHabit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				3727C5122DB6A18700D0FD39 /* Exceptions for "SonoHabit" folder in "SonoHabit" target */,
-			);
 			path = SonoHabit;
 			sourceTree = "<group>";
 		};

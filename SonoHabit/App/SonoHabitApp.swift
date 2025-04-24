@@ -18,7 +18,7 @@ struct SonoHabitApp: App {
                 PracticeMenu.self,
                 PracticeItem.self,
                 RecordingInfo.self,
-                AudioSourceInfo.self,
+                AudioSourceInfoModel.self,
                 UserSettings.self
             ])
             
@@ -40,4 +40,4 @@ struct SonoHabitApp: App {
         }
         .modelContainer(container)
     }
-}
+} 

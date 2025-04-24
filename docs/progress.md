@@ -66,3 +66,63 @@
   - CloudKit連携の実装
   - UIの最適化とユーザーフィードバックの改善
   - プロジェクト構造の見直しと整理
+
+## 2023/05/20 - プロジェクト構造の見直しと整理
+
+### 実施した作業
+1. ディレクトリ構造をプランに合わせて整理
+   - `Model` → `Models` へリネーム
+   - `App` ディレクトリを追加し、エントリポイントを移動
+   - 空の `Extensions` と `Utilities` ディレクトリに実装を追加
+
+2. 未実装だったサービスの追加
+   - `DataManager.swift` を実装
+   - `CloudSyncManager.swift` を実装
+
+3. ユーティリティとエクステンションの実装
+   - `Date+Extensions.swift` の追加
+   - `View+Extensions.swift` の追加
+   - `Color+Extensions.swift` の追加
+   - `Constants.swift` の追加
+   - `Logger.swift` の追加 
+   - `AudioConverter.swift` の追加
+
+4. 未実装だったビューコンポーネントの追加
+   - `SelfEvaluationView.swift` の実装
+   - `CommonButtons.swift` の実装
+
+5. 未実装だった画面の追加
+   - `MenuEditView.swift` の実装
+   - `MenuTemplatesView.swift` の実装
+   - `ItemEditView.swift` の実装
+
+### 注意点
+- 既存ファイルの参照パスは更新が必要（例：モデルファイルのインポート）
+- サービスクラスの実装はスケルトンのみなので、実際の機能は今後実装が必要
+- 新しく追加したビューは既存のナビゲーションに組み込む必要あり
+
+## 2023/05/21 - 新しい画面構造の統合
+
+### 実施した作業
+1. ContentViewの更新
+   - プレースホルダービュー（SettingsViewPlaceholder, AboutViewPlaceholder）を削除
+   - 実際の`SettingsView`と`AboutView`をナビゲーションに組み込み
+
+2. MenuListViewの更新
+   - NavigationLinkの遷移先を`MenuDetailView`に変更
+   - メニュー追加機能を`MenuEditView`に置き換え
+   - テンプレート機能への新しいボタンを追加（`MenuTemplatesView`への遷移）
+
+3. MenuDetailViewの更新
+   - 内部の`EditMenuView`を`MenuEditView`に置き換え
+   - 内部の`AddPracticeItemView`を`ItemEditView`に置き換え
+
+4. ItemDetailViewの更新
+   - 内部の`EditItemView`を`ItemEditView`に置き換え
+   - 自己評価機能のセクションを追加（`SelfEvaluationView`への遷移）
+
+### 注意点
+- 一部のファイルでリンターエラーが発生しているため、別途修正が必要
+- モデル変数名（例：`itemDescription`）とビュー名（例：`description`）の不一致を確認する必要がある
+
+# 作業進捗メモ

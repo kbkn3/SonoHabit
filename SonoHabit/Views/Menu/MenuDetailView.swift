@@ -103,10 +103,10 @@ struct MenuDetailView: View {
             #endif
         }
         .sheet(isPresented: $isShowingAddItem) {
-            AddPracticeItemView(menu: menu)
+            ItemEditView(mode: .create, menu: menu)
         }
         .sheet(isPresented: $isShowingEditMenu) {
-            EditMenuView(menu: menu)
+            MenuEditView(mode: .edit, menu: menu)
         }
     }
     
@@ -126,116 +126,6 @@ struct MenuDetailView: View {
         // 順番を更新
         for (index, item) in items.enumerated() {
             item.order = index
-        }
-    }
-}
-
-struct EditMenuView: View {
-    @Environment(\.dismiss) var dismiss
-    @Bindable var menu: PracticeMenu
-    
-    @State private var name: String
-    @State private var description: String
-    
-    init(menu: PracticeMenu) {
-        self.menu = menu
-        _name = State(initialValue: menu.name)
-        _description = State(initialValue: menu.menuDescription)
-    }
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section(header: Text("メニュー情報")) {
-                    TextField("名前", text: $name)
-                    TextField("説明", text: $description)
-                }
-            }
-            .navigationTitle("メニュー編集")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
-                        updateMenu()
-                        dismiss()
-                    }
-                    .disabled(name.isEmpty)
-                }
-            }
-        }
-    }
-    
-    private func updateMenu() {
-        withAnimation {
-            menu.name = name
-            menu.menuDescription = description
-        }
-    }
-}
-
-struct AddPracticeItemView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) var dismiss
-    
-    var menu: PracticeMenu
-    
-    @State private var name = ""
-    @State private var description = ""
-    @State private var bpm = 120
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section(header: Text("項目情報")) {
-                    TextField("名前", text: $name)
-                    TextField("説明", text: $description)
-                }
-                
-                Section(header: Text("メトロノーム設定")) {
-                    Stepper("BPM: \(bpm)", value: $bpm, in: 40...240)
-                }
-            }
-            .navigationTitle("新規練習項目")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
-                        addItem()
-                        dismiss()
-                    }
-                    .disabled(name.isEmpty)
-                }
-            }
-        }
-    }
-    
-    private func addItem() {
-        withAnimation {
-            let newItem = PracticeItem(
-                name: name,
-                description: description,
-                order: menu.items.count,
-                bpm: bpm
-            )
-            
-            menu.items.append(newItem)
-            modelContext.insert(newItem)
         }
     }
 }

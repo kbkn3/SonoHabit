@@ -7,6 +7,7 @@ struct ItemDetailView: View {
     @Bindable var item: PracticeItem
     @State private var isShowingEditItem = false
     @State private var isShowingPracticeView = false
+    @State private var isShowingSelfEvaluation = false
     
     var body: some View {
         List {
@@ -113,6 +114,12 @@ struct ItemDetailView: View {
                     .onDelete(perform: deleteAudioSources)
                 }
             }
+            
+            Section(header: Text("自己評価")) {
+                Button("自己評価を入力する") {
+                    isShowingSelfEvaluation = true
+                }
+            }
         }
         .navigationTitle(item.name)
         .toolbar {
@@ -151,10 +158,13 @@ struct ItemDetailView: View {
             #endif
         }
         .sheet(isPresented: $isShowingEditItem) {
-            EditItemView(item: item)
+            ItemEditView(mode: .edit, item: item)
         }
         .sheet(isPresented: $isShowingPracticeView) {
             PracticeView(item: item)
+        }
+        .sheet(isPresented: $isShowingSelfEvaluation) {
+            SelfEvaluationView(item: item)
         }
     }
     
@@ -179,118 +189,6 @@ struct ItemDetailView: View {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         return String(format: "%d:%02d", minutes, seconds)
-    }
-}
-
-struct EditItemView: View {
-    @Environment(\.dismiss) var dismiss
-    @Bindable var item: PracticeItem
-    
-    @State private var name: String
-    @State private var description: String
-    @State private var bpm: Int
-    @State private var timeSignatureNumerator: Int
-    @State private var timeSignatureDenominator: Int
-    @State private var totalBars: Int
-    @State private var repeatCount: Int
-    @State private var autoIncreaseBPM: Bool
-    @State private var maxBPM: Int?
-    @State private var bpmIncrement: Int?
-    
-    init(item: PracticeItem) {
-        self.item = item
-        _name = State(initialValue: item.name)
-        _description = State(initialValue: item.itemDescription)
-        _bpm = State(initialValue: item.bpm)
-        _timeSignatureNumerator = State(initialValue: item.timeSignatureNumerator)
-        _timeSignatureDenominator = State(initialValue: item.timeSignatureDenominator)
-        _totalBars = State(initialValue: item.totalBars)
-        _repeatCount = State(initialValue: item.repeatCount)
-        _autoIncreaseBPM = State(initialValue: item.autoIncreaseBPM)
-        _maxBPM = State(initialValue: item.maxBPM)
-        _bpmIncrement = State(initialValue: item.bpmIncrement)
-    }
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section(header: Text("項目情報")) {
-                    TextField("名前", text: $name)
-                    TextField("説明", text: $description)
-                }
-                
-                Section(header: Text("メトロノーム設定")) {
-                    Stepper("BPM: \(bpm)", value: $bpm, in: 40...240)
-                    
-                    Picker("拍子", selection: $timeSignatureNumerator) {
-                        ForEach(2..<9) { num in
-                            Text("\(num)/\(timeSignatureDenominator)")
-                                .tag(num)
-                        }
-                    }
-                    
-                    Picker("拍子単位", selection: $timeSignatureDenominator) {
-                        Text("2").tag(2)
-                        Text("4").tag(4)
-                        Text("8").tag(8)
-                    }
-                    
-                    Stepper("小節数: \(totalBars)", value: $totalBars, in: 1...64)
-                    
-                    Stepper("繰り返し回数: \(repeatCount)", value: $repeatCount, in: 1...20)
-                    
-                    Toggle("BPM自動増加", isOn: $autoIncreaseBPM)
-                    
-                    if autoIncreaseBPM {
-                        let binding = Binding<Int>(
-                            get: { maxBPM ?? bpm + 20 },
-                            set: { maxBPM = $0 }
-                        )
-                        Stepper("最大BPM: \(binding.wrappedValue)", value: binding, in: bpm...240)
-                        
-                        let incrementBinding = Binding<Int>(
-                            get: { bpmIncrement ?? 5 },
-                            set: { bpmIncrement = $0 }
-                        )
-                        Stepper("増加量: \(incrementBinding.wrappedValue)BPM", value: incrementBinding, in: 1...20)
-                    }
-                }
-            }
-            .navigationTitle("項目編集")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
-                        updateItem()
-                        dismiss()
-                    }
-                    .disabled(name.isEmpty)
-                }
-            }
-        }
-    }
-    
-    private func updateItem() {
-        withAnimation {
-            item.name = name
-            item.itemDescription = description
-            item.bpm = bpm
-            item.timeSignatureNumerator = timeSignatureNumerator
-            item.timeSignatureDenominator = timeSignatureDenominator
-            item.totalBars = totalBars
-            item.repeatCount = repeatCount
-            item.autoIncreaseBPM = autoIncreaseBPM
-            item.maxBPM = autoIncreaseBPM ? maxBPM : nil
-            item.bpmIncrement = autoIncreaseBPM ? bpmIncrement : nil
-        }
     }
 }
 

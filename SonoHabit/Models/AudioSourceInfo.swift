@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class AudioSourceInfo {
+final class AudioSourceInfoModel {
     var fileName: String
     var displayName: String
     var createdAt: Date
