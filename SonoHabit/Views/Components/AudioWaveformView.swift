@@ -6,7 +6,7 @@ struct AudioWaveformView: View {
     var inactiveColor: Color = Color.blue.opacity(0.2)
     var backgroundColor: Color = Color.clear
     var isRecording: Bool = false
-    
+
     var body: some View {
         GeometryReader { geometry in
             HStack(alignment: .center, spacing: 2) {
@@ -22,13 +22,13 @@ struct AudioWaveformView: View {
             .background(backgroundColor)
         }
     }
-    
+
     // バーの幅を計算
     private func barWidth(for totalWidth: CGFloat) -> CGFloat {
         let spacingTotal = CGFloat(levels.count - 1) * 2
         return max(2, (totalWidth - spacingTotal) / CGFloat(levels.count))
     }
-    
+
     // バーの高さを計算
     private func barHeight(for level: Float, height: CGFloat) -> CGFloat {
         let minHeight: CGFloat = 3
@@ -46,4 +46,4 @@ struct AudioWaveformView_Previews: PreviewProvider {
         .padding()
         .previewLayout(.sizeThatFits)
     }
-} 
+}

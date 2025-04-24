@@ -2,15 +2,15 @@ import SwiftUI
 
 struct AudioPlayerView: View {
     @StateObject private var player = AudioPlayer()
-    
+
     let url: URL
     let title: String
-    
+
     init(url: URL, title: String) {
         self.url = url
         self.title = title
     }
-    
+
     var body: some View {
         VStack(spacing: 12) {
             // タイトルと時間表示
@@ -18,9 +18,9 @@ struct AudioPlayerView: View {
                 Text(title)
                     .font(.headline)
                     .lineLimit(1)
-                
+
                 Spacer()
-                
+
                 Text(timeString(from: player.currentTime))
                     .font(.system(.body, design: .monospaced))
                     .fontWeight(.medium) +
@@ -29,7 +29,7 @@ struct AudioPlayerView: View {
                     .font(.system(.body, design: .monospaced))
                     .foregroundColor(.secondary)
             }
-            
+
             // シークバー
             Slider(
                 value: Binding(
@@ -39,7 +39,7 @@ struct AudioPlayerView: View {
                 in: 0...max(0.1, player.duration)
             )
             .accentColor(.blue)
-            
+
             // 再生コントロール
             HStack {
                 // 10秒戻る
@@ -50,9 +50,9 @@ struct AudioPlayerView: View {
                         .font(.title2)
                 }
                 .buttonStyle(.borderless)
-                
+
                 Spacer()
-                
+
                 // 再生/一時停止
                 Button {
                     if player.isPlaying {
@@ -71,9 +71,9 @@ struct AudioPlayerView: View {
                         .foregroundColor(.blue)
                 }
                 .buttonStyle(.borderless)
-                
+
                 Spacer()
-                
+
                 // 10秒進む
                 Button {
                     player.seek(to: min(player.duration, player.currentTime + 10))
@@ -84,7 +84,7 @@ struct AudioPlayerView: View {
                 .buttonStyle(.borderless)
             }
             .padding(.horizontal)
-            
+
             // エラー表示
             if let errorMessage = player.errorMessage {
                 Text(errorMessage)
@@ -104,7 +104,7 @@ struct AudioPlayerView: View {
             player.stop()
         }
     }
-    
+
     // 時間表示を整形
     private func timeString(from interval: TimeInterval) -> String {
         let minutes = Int(interval) / 60
@@ -116,7 +116,7 @@ struct AudioPlayerView: View {
 #Preview {
     // プレビュー用の一時的なURLを作成（実際には存在しないため実行時エラーとなる）
     let previewURL = URL(string: "file:///tmp/preview.m4a")!
-    
+
     return AudioPlayerView(url: previewURL, title: "テスト録音")
         .padding()
-} 
+}

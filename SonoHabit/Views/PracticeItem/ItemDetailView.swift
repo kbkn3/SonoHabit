@@ -3,12 +3,12 @@ import SwiftData
 
 struct ItemDetailView: View {
     @Environment(\.modelContext) private var modelContext
-    
+
     @Bindable var item: PracticeItem
     @State private var isShowingEditItem = false
     @State private var isShowingPracticeView = false
     @State private var isShowingSelfEvaluation = false
-    
+
     var body: some View {
         List {
             Section {
@@ -16,24 +16,24 @@ struct ItemDetailView: View {
                     Text(item.itemDescription)
                         .font(.subheadline)
                 }
-                
+
                 Text("作成日: \(item.createdAt.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Section(header: Text("メトロノーム設定")) {
                 LabeledContent("BPM", value: "\(item.bpm)")
-                
+
                 LabeledContent("拍子", value: "\(item.timeSignatureNumerator)/\(item.timeSignatureDenominator)")
-                
+
                 LabeledContent("小節数", value: "\(item.totalBars)")
-                
+
                 LabeledContent("繰り返し回数", value: "\(item.repeatCount)")
-                
+
                 if item.autoIncreaseBPM {
                     LabeledContent("BPM自動増加", value: "有効")
-                    
+
                     if let maxBPM = item.maxBPM, let bpmIncrement = item.bpmIncrement {
                         LabeledContent("最大BPM", value: "\(maxBPM)")
                         LabeledContent("増加量", value: "\(bpmIncrement)BPM")
@@ -42,7 +42,7 @@ struct ItemDetailView: View {
                     LabeledContent("BPM自動増加", value: "無効")
                 }
             }
-            
+
             Section(header: Text("録音")) {
                 if item.recordings.isEmpty {
                     Text("録音がありません。練習ビューで録音を行なってください。")
@@ -58,16 +58,16 @@ struct ItemDetailView: View {
                             VStack(alignment: .leading) {
                                 Text(recording.displayName)
                                     .font(.headline)
-                                
+
                                 HStack {
                                     Label(
                                         recording.recordedAt.formatted(date: .abbreviated, time: .shortened),
                                         systemImage: "calendar"
                                     )
                                     .font(.caption)
-                                    
+
                                     Spacer()
-                                    
+
                                     Label(
                                         formatDuration(recording.duration),
                                         systemImage: "clock"
@@ -81,7 +81,7 @@ struct ItemDetailView: View {
                     .onDelete(perform: deleteRecordings)
                 }
             }
-            
+
             Section(header: Text("音源")) {
                 if item.audioSources.isEmpty {
                     Text("音源がありません。")
@@ -97,14 +97,14 @@ struct ItemDetailView: View {
                             VStack(alignment: .leading) {
                                 Text(source.displayName)
                                     .font(.headline)
-                                
+
                                 HStack {
                                     Label(
                                         formatDuration(source.duration),
                                         systemImage: "clock"
                                     )
                                     .font(.caption)
-                                    
+
                                     Spacer()
                                 }
                                 .foregroundColor(.secondary)
@@ -114,7 +114,7 @@ struct ItemDetailView: View {
                     .onDelete(perform: deleteAudioSources)
                 }
             }
-            
+
             Section(header: Text("自己評価")) {
                 Button("自己評価を入力する") {
                     isShowingSelfEvaluation = true
@@ -131,7 +131,7 @@ struct ItemDetailView: View {
                     Label("編集", systemImage: "pencil")
                 }
             }
-            
+
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     isShowingPracticeView = true
@@ -147,7 +147,7 @@ struct ItemDetailView: View {
                     Label("編集", systemImage: "pencil")
                 }
             }
-            
+
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     isShowingPracticeView = true
@@ -167,7 +167,7 @@ struct ItemDetailView: View {
             SelfEvaluationView(item: item)
         }
     }
-    
+
     private func deleteRecordings(offsets: IndexSet) {
         withAnimation {
             let sortedRecordings = item.recordings.sorted(by: { $0.recordedAt > $1.recordedAt })
@@ -176,7 +176,7 @@ struct ItemDetailView: View {
             }
         }
     }
-    
+
     private func deleteAudioSources(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -184,7 +184,7 @@ struct ItemDetailView: View {
             }
         }
     }
-    
+
     private func formatDuration(_ duration: Double) -> String {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
@@ -196,7 +196,7 @@ struct ItemDetailView: View {
     do {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: PracticeItem.self, configurations: config)
-        
+
         let item = PracticeItem(
             name: "スケール練習",
             description: "Cメジャースケール",
@@ -206,7 +206,7 @@ struct ItemDetailView: View {
             bpmIncrement: 5
         )
         container.mainContext.insert(item)
-        
+
         return NavigationStack {
             ItemDetailView(item: item)
         }
@@ -214,4 +214,4 @@ struct ItemDetailView: View {
     } catch {
         return Text("Failed to create preview: \(error.localizedDescription)")
     }
-} 
+}

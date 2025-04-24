@@ -11,10 +11,10 @@ final class RecordingInfo {
     var fileSize: Int64
     var notes: String?
     var selfEvaluation: SelfEvaluation?
-    
+
     @Relationship(deleteRule: .noAction)
     var practiceItem: PracticeItem?
-    
+
     init(
         fileName: String = "",
         displayName: String = "",
@@ -32,4 +32,4 @@ final class RecordingInfo {
         self.fileSize = fileSize
         self.notes = notes
     }
-} 
+}

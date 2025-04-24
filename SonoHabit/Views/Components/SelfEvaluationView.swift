@@ -4,44 +4,47 @@ import SwiftUI
 struct SelfEvaluationView: View {
     /// 評価値 (0: 未評価, 1: 悪い, 2: 普通, 3: 良い)
     @Binding var rating: Int
-    
+
     /// 評価表示用のラベル
     private let ratingLabels = ["未評価", "😕", "😐", "🙂"]
-    
+
     /// 評価ごとの色
     private let ratingColors: [Color] = [.gray, .badRating, .neutralRating, .goodRating]
-    
+
     var body: some View {
         VStack(spacing: 10) {
             Text("自己評価")
                 .font(.headline)
-            
+
             HStack(spacing: 20) {
                 ForEach(1..<ratingLabels.count, id: \.self) { index in
-                    Button(action: {
-                        withAnimation {
-                            rating = index
+                    Button(
+                        action: {
+                            withAnimation {
+                                rating = index
+                            }
+                        },
+                        label: {
+                            Text(ratingLabels[index])
+                                .font(.system(size: 30))
+                                .padding()
+                                .background(
+                                    Circle()
+                                        .fill(rating == index ? ratingColors[index] : Color.clear)
+                                        .frame(width: 60, height: 60)
+                                )
+                                .foregroundColor(rating == index ? .white : ratingColors[index])
+                                .overlay(
+                                    Circle()
+                                        .stroke(ratingColors[index], lineWidth: 2)
+                                        .frame(width: 60, height: 60)
+                                )
                         }
-                    }) {
-                        Text(ratingLabels[index])
-                            .font(.system(size: 30))
-                            .padding()
-                            .background(
-                                Circle()
-                                    .fill(rating == index ? ratingColors[index] : Color.clear)
-                                    .frame(width: 60, height: 60)
-                            )
-                            .foregroundColor(rating == index ? .white : ratingColors[index])
-                            .overlay(
-                                Circle()
-                                    .stroke(ratingColors[index], lineWidth: 2)
-                                    .frame(width: 60, height: 60)
-                            )
-                    }
+                    )
                     .buttonStyle(PlainButtonStyle())
                 }
             }
-            
+
             if rating > 0 {
                 Text("評価: \(ratingLabels[rating])")
                     .foregroundColor(ratingColors[rating])
@@ -64,5 +67,5 @@ struct SelfEvaluationView: View {
         SelfEvaluationView(rating: .constant(3))
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
-} 
+    .background(Color(UIColor.systemGroupedBackground))
+}

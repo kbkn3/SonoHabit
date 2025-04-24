@@ -2,27 +2,27 @@ import SwiftUI
 
 struct MetronomeView: View {
     @StateObject private var metronome = MetronomeEngine()
-    
+
     let item: PracticeItem
-    
+
     init(item: PracticeItem) {
         self.item = item
     }
-    
+
     var body: some View {
         VStack(spacing: 20) {
             HStack {
                 Text("BPM")
                     .font(.headline)
-                
+
                 Spacer()
-                
+
                 Text("\(metronome.bpm)")
                     .font(.title)
                     .fontWeight(.bold)
                     .monospacedDigit()
             }
-            
+
             HStack {
                 Button {
                     metronome.bpm = max(40, metronome.bpm - 5)
@@ -31,12 +31,12 @@ struct MetronomeView: View {
                         .font(.title)
                 }
                 .buttonStyle(.borderless)
-                
+
                 Slider(value: Binding(
                     get: { Double(metronome.bpm) },
                     set: { metronome.bpm = Int($0) }
                 ), in: 40...240, step: 1)
-                
+
                 Button {
                     metronome.bpm = min(240, metronome.bpm + 5)
                 } label: {
@@ -45,14 +45,14 @@ struct MetronomeView: View {
                 }
                 .buttonStyle(.borderless)
             }
-            
+
             HStack {
                 Text("\(metronome.timeSignatureNumerator)/\(metronome.timeSignatureDenominator)")
                     .font(.title2)
                     .fontWeight(.bold)
-                
+
                 Spacer()
-                
+
                 // メトロノームの現在位置
                 HStack(spacing: 4) {
                     ForEach(0..<metronome.timeSignatureNumerator, id: \.self) { beatIndex in
@@ -61,13 +61,13 @@ struct MetronomeView: View {
                             .frame(width: 12, height: 12)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 Text("小節: \(metronome.currentBar + 1)/\(metronome.totalBars)")
                     .font(.subheadline)
             }
-            
+
             // 制御ボタン
             HStack(spacing: 40) {
                 Button {
@@ -78,7 +78,7 @@ struct MetronomeView: View {
                         .foregroundColor(.red)
                 }
                 .disabled(!metronome.isPlaying)
-                
+
                 Button {
                     if metronome.isPlaying {
                         metronome.stop()
@@ -90,7 +90,7 @@ struct MetronomeView: View {
                         .font(.largeTitle)
                         .foregroundColor(.accentColor)
                 }
-                
+
                 Button {
                     metronome.restart()
                 } label: {
@@ -100,16 +100,16 @@ struct MetronomeView: View {
                 .disabled(!metronome.isPlaying)
             }
             .padding(.vertical)
-            
+
             if metronome.autoIncreaseBPM, let maxBPM = metronome.maxBPM, let increment = metronome.bpmIncrement {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("自動BPM増加: 有効")
                         .font(.subheadline)
-                    
+
                     Text("最大: \(maxBPM)BPM / 増加量: \(increment)BPM")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     ProgressView(value: Double(metronome.bpm), total: Double(maxBPM))
                         .progressViewStyle(.linear)
                 }
@@ -145,7 +145,7 @@ struct MetronomeView: View {
         maxBPM: 120,
         bpmIncrement: 5
     )
-    
+
     return MetronomeView(item: item)
         .padding()
-} 
+}

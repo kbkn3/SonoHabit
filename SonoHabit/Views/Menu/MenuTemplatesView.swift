@@ -5,10 +5,10 @@ import SwiftData
 struct MenuTemplatesView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    
+
     /// テンプレート選択完了時のコールバック
     var onTemplateSelected: (PracticeMenu) -> Void
-    
+
     /// プリセットテンプレート
     private let templates = [
         TemplateDefinition(
@@ -43,30 +43,33 @@ struct MenuTemplatesView: View {
             ]
         )
     ]
-    
+
     var body: some View {
         List {
             Section(header: Text("テンプレートを選択")) {
                 ForEach(templates) { template in
-                    Button(action: {
-                        createMenuFromTemplate(template)
-                    }) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(template.name)
-                                .font(.headline)
-                            
-                            if let description = template.description {
-                                Text(description)
-                                    .font(.caption)
+                    Button(
+                        action: {
+                            createMenuFromTemplate(template)
+                        },
+                        label: {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(template.name)
+                                    .font(.headline)
+
+                                if let description = template.description {
+                                    Text(description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Text("項目: \(template.items.count)個")
+                                    .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
-                            
-                            Text("項目: \(template.items.count)個")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                            .padding(.vertical, 8)
                         }
-                        .padding(.vertical, 8)
-                    }
+                    )
                 }
             }
         }
@@ -79,25 +82,25 @@ struct MenuTemplatesView: View {
             }
         }
     }
-    
+
     /// テンプレートから練習メニューを作成する
     private func createMenuFromTemplate(_ template: TemplateDefinition) {
         // 新しいメニューを作成
         let newMenu = PracticeMenu(name: template.name)
         newMenu.description = template.description
-        
+
         // 項目を追加
         for (index, itemName) in template.items.enumerated() {
             let newItem = PracticeItem(name: itemName, order: index + 1)
             newMenu.addToItems(newItem)
         }
-        
+
         // モデルにメニューを追加
         modelContext.insert(newMenu)
-        
+
         // コールバックを呼び出す
         onTemplateSelected(newMenu)
-        
+
         // ビューを閉じる
         dismiss()
     }
@@ -109,7 +112,7 @@ struct TemplateDefinition: Identifiable {
     let name: String
     let description: String?
     let items: [String]
-    
+
     init(name: String, description: String? = nil, items: [String]) {
         self.name = name
         self.description = description
@@ -123,4 +126,4 @@ struct TemplateDefinition: Identifiable {
             // プレビューでは何もしない
         }
     }
-} 
+}

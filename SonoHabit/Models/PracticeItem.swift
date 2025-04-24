@@ -11,12 +11,12 @@ struct SelfEvaluation: Codable, Hashable {
     var date: Date
     var rating: Rating
     var notes: String?
-    
+
     enum Rating: Int, Codable, Hashable {
         case good = 3
         case ok = 2
         case needsWork = 1
-        
+
         var emoji: String {
             switch self {
             case .good: return "🙂"
@@ -33,7 +33,7 @@ final class PracticeItem {
     var itemDescription: String
     var order: Int
     var createdAt: Date
-    
+
     // メトロノーム設定
     var bpm: Int
     var timeSignatureNumerator: Int
@@ -43,22 +43,22 @@ final class PracticeItem {
     var autoIncreaseBPM: Bool
     var maxBPM: Int?
     var bpmIncrement: Int?
-    
+
     // 関連
     // TODO: Add these relationships back once model classes are fully defined
     // @Relationship(deleteRule: .noAction)
     // var menu: PracticeMenu?
-    
+
     // @Relationship(deleteRule: .cascade, inverse: \RecordingInfo.practiceItem)
     // var recordings: [RecordingInfo] = []
-    
+
     // @Relationship(deleteRule: .cascade, inverse: \AudioSourceInfoModel.practiceItem)
     // var audioSources: [AudioSourceInfoModel] = []
-    
+
     // 評価履歴
     @Transient
     var selfEvaluations: [SelfEvaluation] = []
-    
+
     init(
         name: String,
         itemDescription: String = "",
@@ -85,4 +85,4 @@ final class PracticeItem {
         self.maxBPM = maxBPM
         self.bpmIncrement = bpmIncrement
     }
-} 
+}

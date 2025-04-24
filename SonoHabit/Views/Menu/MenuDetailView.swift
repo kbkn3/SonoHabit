@@ -3,11 +3,11 @@ import SwiftData
 
 struct MenuDetailView: View {
     @Environment(\.modelContext) private var modelContext
-    
+
     @Bindable var menu: PracticeMenu
     @State private var isShowingAddItem = false
     @State private var isShowingEditMenu = false
-    
+
     var body: some View {
         List {
             Section {
@@ -16,12 +16,12 @@ struct MenuDetailView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Text("作成日: \(menu.createdAt.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Section(header: Text("練習項目")) {
                 if menu.items.isEmpty {
                     Text("練習項目がありません。右上の＋ボタンから追加してください。")
@@ -37,19 +37,19 @@ struct MenuDetailView: View {
                             VStack(alignment: .leading) {
                                 Text(item.name)
                                     .font(.headline)
-                                
+
                                 if !item.itemDescription.isEmpty {
                                     Text(item.itemDescription)
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                 }
-                                
+
                                 HStack {
                                     Label("\(item.bpm)BPM", systemImage: "metronome")
                                         .font(.caption)
-                                    
+
                                     Spacer()
-                                    
+
                                     Label("\(item.recordings.count)", systemImage: "mic")
                                         .font(.caption)
                                 }
@@ -72,7 +72,7 @@ struct MenuDetailView: View {
                     Label("追加", systemImage: "plus")
                 }
             }
-            
+
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     isShowingEditMenu = true
@@ -80,7 +80,7 @@ struct MenuDetailView: View {
                     Label("編集", systemImage: "pencil")
                 }
             }
-            
+
             ToolbarItem(placement: .navigationBarTrailing) {
                 EditButton()
             }
@@ -92,7 +92,7 @@ struct MenuDetailView: View {
                     Label("追加", systemImage: "plus")
                 }
             }
-            
+
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     isShowingEditMenu = true
@@ -109,7 +109,7 @@ struct MenuDetailView: View {
             MenuEditView(mode: .edit, menu: menu)
         }
     }
-    
+
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -118,11 +118,11 @@ struct MenuDetailView: View {
             }
         }
     }
-    
+
     private func moveItems(from source: IndexSet, to destination: Int) {
         var items = menu.items.sorted(by: { $0.order < $1.order })
         items.move(fromOffsets: source, toOffset: destination)
-        
+
         // 順番を更新
         for (index, item) in items.enumerated() {
             item.order = index
@@ -134,19 +134,19 @@ struct MenuDetailView: View {
     do {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: PracticeMenu.self, configurations: config)
-        
+
         let menu = PracticeMenu(name: "サンプルメニュー", description: "これはテスト用のメニューです")
         container.mainContext.insert(menu)
-        
+
         let item1 = PracticeItem(name: "スケール練習", description: "Cメジャースケール", order: 0, bpm: 100)
         let item2 = PracticeItem(name: "コード練習", description: "基本コード", order: 1, bpm: 80)
-        
+
         menu.items.append(item1)
         menu.items.append(item2)
-        
+
         container.mainContext.insert(item1)
         container.mainContext.insert(item2)
-        
+
         return NavigationStack {
             MenuDetailView(menu: menu)
         }
@@ -154,4 +154,4 @@ struct MenuDetailView: View {
     } catch {
         return Text("Failed to create preview: \(error.localizedDescription)")
     }
-} 
+}

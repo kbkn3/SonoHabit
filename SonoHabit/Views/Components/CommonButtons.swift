@@ -5,7 +5,7 @@ struct PrimaryButton: View {
     let text: String
     let icon: String?
     let action: () -> Void
-    
+
     /// 標準的なプライマリーボタン
     /// - Parameters:
     ///   - text: ボタンのテキスト
@@ -16,7 +16,7 @@ struct PrimaryButton: View {
         self.icon = icon
         self.action = action
     }
-    
+
     var body: some View {
         Button(action: action) {
             HStack {
@@ -39,7 +39,7 @@ struct SecondaryButton: View {
     let text: String
     let icon: String?
     let action: () -> Void
-    
+
     /// 標準的なセカンダリーボタン
     /// - Parameters:
     ///   - text: ボタンのテキスト
@@ -50,7 +50,7 @@ struct SecondaryButton: View {
         self.icon = icon
         self.action = action
     }
-    
+
     var body: some View {
         Button(action: action) {
             HStack {
@@ -77,7 +77,7 @@ struct IconButton: View {
     let icon: String
     let color: Color
     let action: () -> Void
-    
+
     /// アイコンのみのボタン
     /// - Parameters:
     ///   - icon: システムアイコン名
@@ -88,7 +88,7 @@ struct IconButton: View {
         self.color = color
         self.action = action
     }
-    
+
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
@@ -112,4 +112,4 @@ struct IconButton: View {
         }
     }
     .padding()
-} 
+}

@@ -3,25 +3,25 @@ import SwiftUI
 struct RecordingView: View {
     @StateObject private var recorder = AudioRecorder()
     @State private var showDeleteAlert = false
-    
+
     let item: PracticeItem
     var onRecordingComplete: ((URL) -> Void)?
-    
+
     var body: some View {
         VStack(spacing: 16) {
             // タイトルと時間表示
             HStack {
                 Text("録音")
                     .font(.headline)
-                
+
                 Spacer()
-                
+
                 Text(timeString(from: recorder.recordingTime))
                     .font(.system(.title2, design: .monospaced))
                     .fontWeight(.bold)
                     .foregroundColor(recorder.isRecording ? .red : .primary)
             }
-            
+
             // 波形表示
             AudioWaveformView(
                 levels: recorder.recordingLevels,
@@ -31,7 +31,7 @@ struct RecordingView: View {
             )
             .frame(height: 60)
             .padding(.vertical, 8)
-            
+
             // 録音コントロール
             HStack(spacing: 40) {
                 if recorder.isDoneRecording {
@@ -43,7 +43,7 @@ struct RecordingView: View {
                             .font(.title2)
                             .foregroundColor(.red)
                     }
-                    
+
                     Button {
                         if let url = recorder.recordedFileURL {
                             onRecordingComplete?(url)
@@ -69,7 +69,7 @@ struct RecordingView: View {
                 }
             }
             .padding(.vertical, 8)
-            
+
             // エラーメッセージの表示
             if let errorMessage = recorder.errorMessage {
                 Text(errorMessage)
@@ -91,7 +91,7 @@ struct RecordingView: View {
             Text("この操作は元に戻せません。")
         }
     }
-    
+
     // 時間表示を整形
     private func timeString(from interval: TimeInterval) -> String {
         let minutes = Int(interval) / 60
@@ -106,7 +106,7 @@ struct RecordingView: View {
         name: "テスト録音",
         description: "録音テスト用アイテム"
     )
-    
+
     return RecordingView(item: item)
         .padding()
-} 
+}

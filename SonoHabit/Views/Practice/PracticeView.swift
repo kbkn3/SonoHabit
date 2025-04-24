@@ -5,20 +5,20 @@ import Foundation // Dateフォーマット用に追加
 struct PracticeView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
-    
+
     @Bindable var item: PracticeItem
-    
+
     @State private var selectedTab = 0
     @State private var showSelfEvaluation = false
     @State private var selfEvaluation: SelfEvaluation.Rating = .ok
     @State private var evaluationNotes = ""
-    
+
     // 録音関連
     @State private var showSaveRecordingAlert = false
     @State private var tempRecordingURL: URL?
     @State private var recordings: [RecordingInfo] = []
     @State private var selectedRecording: RecordingInfo?
-    
+
     var body: some View {
         VStack {
             // ヘッダー
@@ -27,16 +27,16 @@ struct PracticeView: View {
                     Text(item.name)
                         .font(.title2)
                         .fontWeight(.bold)
-                    
+
                     if !item.itemDescription.isEmpty {
                         Text(item.itemDescription)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 Button {
                     dismiss()
                 } label: {
@@ -46,7 +46,7 @@ struct PracticeView: View {
                 }
             }
             .padding()
-            
+
             // タブ選択
             Picker("モード", selection: $selectedTab) {
                 Image(systemName: "metronome").tag(0)
@@ -55,14 +55,14 @@ struct PracticeView: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
-            
+
             // タブコンテンツ
             TabView(selection: $selectedTab) {
                 // メトロノームタブ
                 MetronomeView(item: item)
                     .padding()
                     .tag(0)
-                
+
                 // 録音タブ
                 VStack(spacing: 16) {
                     if let selectedRecording = selectedRecording,
@@ -70,7 +70,7 @@ struct PracticeView: View {
                         // 選択された録音の再生画面
                         AudioPlayerView(url: url, title: recordingDisplayName(selectedRecording))
                             .transition(.opacity)
-                        
+
                         Button("録音リストに戻る") {
                             withAnimation {
                                 self.selectedRecording = nil
@@ -81,13 +81,13 @@ struct PracticeView: View {
                         // 一時録音の再生画面
                         AudioPlayerView(url: tempURL, title: "新規録音")
                             .transition(.opacity)
-                        
+
                         HStack(spacing: 20) {
                             Button("破棄") {
                                 tempRecordingURL = nil
                             }
                             .foregroundColor(.red)
-                            
+
                             Button("保存") {
                                 showSaveRecordingAlert = true
                             }
@@ -105,7 +105,7 @@ struct PracticeView: View {
                                 .foregroundColor(.secondary)
                                 .padding(.bottom)
                         }
-                        
+
                         RecordingView(item: item) { url in
                             tempRecordingURL = url
                         }
@@ -113,7 +113,7 @@ struct PracticeView: View {
                 }
                 .padding()
                 .tag(1)
-                
+
                 // 音源再生タブ
                 Text("音源再生機能（後で実装）")
                     .padding()
@@ -124,11 +124,11 @@ struct PracticeView: View {
             #else
             .tabViewStyle(.automatic)
             #endif
-            
+
             // 下部コントロール
             HStack {
                 Spacer()
-                
+
                 Button {
                     showSelfEvaluation = true
                 } label: {
@@ -157,14 +157,14 @@ struct PracticeView: View {
             loadRecordings()
         }
     }
-    
+
     // 録音リスト表示
     private var recordingsList: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("録音リスト")
                 .font(.headline)
                 .padding(.bottom, 4)
-            
+
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     ForEach(recordings) { recording in
@@ -176,7 +176,7 @@ struct PracticeView: View {
             .frame(maxHeight: 200)
         }
     }
-    
+
     // 録音リストの行
     private func recordingRow(_ recording: RecordingInfo) -> some View {
         Button {
@@ -187,23 +187,23 @@ struct PracticeView: View {
             HStack {
                 Image(systemName: "waveform")
                     .foregroundColor(.accentColor)
-                
+
                 VStack(alignment: .leading) {
                     Text(recordingDisplayName(recording))
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
-                    
+
                     Text(formattedDate(for: recording))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Text(formatFileSize(recording.fileSize))
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -222,7 +222,7 @@ struct PracticeView: View {
             }
         }
     }
-    
+
     var selfEvaluationView: some View {
         NavigationStack {
             Form {
@@ -233,7 +233,7 @@ struct PracticeView: View {
                         Text("要改善").tag(SelfEvaluation.Rating.needsWork)
                     }
                     .pickerStyle(.segmented)
-                    
+
                     TextField("メモ（オプション）", text: $evaluationNotes)
                 }
             }
@@ -247,7 +247,7 @@ struct PracticeView: View {
                         showSelfEvaluation = false
                     }
                 }
-                
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
                         saveEvaluation()
@@ -257,7 +257,7 @@ struct PracticeView: View {
             }
         }
     }
-    
+
     // 自己評価の保存
     private func saveEvaluation() {
         withAnimation {
@@ -266,75 +266,75 @@ struct PracticeView: View {
                 rating: selfEvaluation,
                 notes: evaluationNotes.isEmpty ? nil : evaluationNotes
             )
-            
+
             item.selfEvaluations.append(newEvaluation)
         }
     }
-    
+
     // 録音の読み込み
     private func loadRecordings() {
         // SwiftDataのリレーションから録音情報を取得
-        recordings = item.recordings.sorted { 
+        recordings = item.recordings.sorted {
             // 日付が取得できない場合は末尾に表示
             guard let date1 = getDateIfAvailable($0),
-                  let date2 = getDateIfAvailable($1) else { 
-                return false 
+                  let date2 = getDateIfAvailable($1) else {
+                return false
             }
             return date1 > date2
         }
     }
-    
+
     // 安全に日付を取得するヘルパーメソッド
     private func getDateIfAvailable(_ recording: RecordingInfo) -> Date? {
         // recordedAtプロパティが存在すればそれを使用
         // コンパイラエラー回避のためのワークアラウンド
         return (recording as? any Hashable as? RecordingInfo)?.recordedAt ?? Date()
     }
-    
+
     // 録音の削除
     private func deleteRecording(_ recording: RecordingInfo) {
         FileManagerService.shared.deleteRecording(recording, in: modelContext)
-        
+
         // UIを更新
         loadRecordings()
         if selectedRecording?.id == recording.id {
             selectedRecording = nil
         }
     }
-    
+
     // 録音の保存
     private func saveRecording() {
         guard let url = tempRecordingURL else { return }
-        
+
         if let newRecording = FileManagerService.shared.saveRecording(from: url, for: item, in: modelContext) {
             // UIを更新
             tempRecordingURL = nil
             loadRecordings()
         }
     }
-    
+
     // 録音ファイルのURL取得
     private func getRecordingURL(for recording: RecordingInfo) throws -> URL {
         let url = FileManagerService.shared.getRecordingURL(for: recording)
-        
+
         if !FileManager.default.fileExists(atPath: url.path) {
             throw NSError(domain: "FileNotFound", code: 404, userInfo: [NSLocalizedDescriptionKey: "録音ファイルが見つかりません"])
         }
-        
+
         return url
     }
-    
+
     // 録音表示名の生成
     private func recordingDisplayName(_ recording: RecordingInfo) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM/dd HH:mm"
-        
+
         if let date = getDateIfAvailable(recording) {
             return "録音: \(formatter.string(from: date))"
         }
         return "録音"
     }
-    
+
     // ファイルサイズのフォーマット
     private func formatFileSize(_ size: Int64) -> String {
         let formatter = ByteCountFormatter()
@@ -342,13 +342,13 @@ struct PracticeView: View {
         formatter.countStyle = .file
         return formatter.string(fromByteCount: size)
     }
-    
+
     // 録音の日付を安全にフォーマットするヘルパーメソッド
     private func formattedDate(for recording: RecordingInfo) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
-        
+
         // ワークアラウンドとして、日付を直接フォーマット
         if let date = getDateIfAvailable(recording) {
             return formatter.string(from: date)
@@ -364,7 +364,7 @@ struct PracticeView: View {
             for: PracticeItem.self, RecordingInfo.self,
             configurations: config
         )
-        
+
         let item = PracticeItem(
             name: "スケール練習",
             description: "Cメジャースケール",
@@ -374,7 +374,7 @@ struct PracticeView: View {
             bpmIncrement: 5
         )
         container.mainContext.insert(item)
-        
+
         return NavigationStack {
             PracticeView(item: item)
         }
@@ -382,4 +382,4 @@ struct PracticeView: View {
     } catch {
         return Text("Failed to create preview: \(error.localizedDescription)")
     }
-} 
+}

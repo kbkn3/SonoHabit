@@ -10,18 +10,18 @@ final class AudioSourceInfoModel {
     var bookmarkData: Data?
     var duration: Double
     var notes: String?
-    
+
     // A-Bループ設定
     var loopStart: Double?
     var loopEnd: Double?
-    
+
     // 速度・ピッチ設定
     var playbackRate: Double
     var pitch: Double
-    
+
     @Relationship(deleteRule: .noAction)
     var practiceItem: PracticeItem?
-    
+
     init(
         fileName: String,
         displayName: String,

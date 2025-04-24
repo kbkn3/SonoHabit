@@ -10,7 +10,7 @@ import SwiftData
 
 struct ContentView: View {
     @State private var selectedTab = 0
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
@@ -20,7 +20,7 @@ struct ContentView: View {
                 Label("メニュー", systemImage: "list.bullet")
             }
             .tag(0)
-            
+
             NavigationStack {
                 RecordingListView()
             }
@@ -28,7 +28,7 @@ struct ContentView: View {
                 Label("録音", systemImage: "mic")
             }
             .tag(1)
-            
+
             NavigationStack {
                 SettingsTabView()
             }
@@ -44,20 +44,20 @@ struct ContentView: View {
 struct SettingsTabView: View {
     @State private var navigateToSettings = false
     @State private var navigateToAbout = false
-    
+
     var body: some View {
         VStack {
             Text("設定")
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .padding()
-            
+
             Form {
                 Section {
                     Button("設定を開く") {
                         navigateToSettings = true
                     }
-                    
+
                     Button("アプリについて") {
                         navigateToAbout = true
                     }

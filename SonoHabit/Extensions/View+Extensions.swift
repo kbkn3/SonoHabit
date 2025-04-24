@@ -12,7 +12,7 @@ extension View {
             )
             .padding(.horizontal)
     }
-    
+
     /// ビューに標準的なボタンスタイルを適用する
     func standardButtonStyle() -> some View {
         self
@@ -21,7 +21,7 @@ extension View {
             .foregroundColor(.white)
             .cornerRadius(8)
     }
-    
+
     /// ビューをタップ可能なカード形式にする
     func tappableCardStyle(action: @escaping () -> Void) -> some View {
         self
@@ -31,7 +31,7 @@ extension View {
                 action()
             }
     }
-    
+
     /// 条件付きで修飾子を適用する
     @ViewBuilder
     func `if`<Transform: View>(_ condition: Bool, transform: (Self) -> Transform) -> some View {
@@ -41,4 +41,4 @@ extension View {
             self
         }
     }
-} 
+}
