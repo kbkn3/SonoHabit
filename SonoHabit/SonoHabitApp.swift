@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct SonoHabitApp: App {
@@ -13,5 +14,6 @@ struct SonoHabitApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: [PracticeMenu.self, PracticeItem.self, UserSettings.self])
     }
 }

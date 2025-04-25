@@ -6,19 +6,25 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        MenuListView()
+            .onAppear {
+                setupInitialData()
+            }
+    }
+    
+    private func setupInitialData() {
+        // ユーザー設定の初期化
+        _ = DataManager.shared.getUserSettings(context: modelContext)
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: [PracticeMenu.self, PracticeItem.self, UserSettings.self], inMemory: true)
 }
