@@ -22,97 +22,260 @@ Interface: SwiftUI
 Storage: SwiftData
 Include Tests にチェック推奨
 必要に応じてCursor等の開発支援ツールを設定。
+プロジェクト構成をディレクトリ構造に合わせて整理。
 
 ## 3. 実装フェーズ (段階的アプローチ)
 
 ### フェーズ 1: データモデル定義と練習メニュー基本UI (MVPコア - Part 1)
 
 目標: 練習メニューと練習項目の基本的な情報を登録・表示・編集・削除できるようにする。
-タスク:
-@Model を使用して SwiftData のデータモデルを定義する (例: PracticeMenu, PracticeItem)。
-PracticeMenu: 名前、作成日など。
-PracticeItem: 名前、説明、順番、(将来のためのメトロノーム設定等のプレースホルダ)。
-SwiftUI で練習メニューの一覧表示画面を作成 (List)。
-練習メニューの追加・削除機能の実装 (@Environment(\.modelContext) を利用)。
-練習メニュー選択時に、そのメニューに含まれる練習項目の一覧表示画面へ遷移。
-練習項目の追加・編集・削除機能の実装。
-基本的なCRUD (作成/読み取り/更新/削除) 操作のテスト。
+
+#### タスク
+
+1. SwiftData のデータモデルを定義する:
+   - `Models/PracticeMenu.swift`: 名前、作成日など
+   - `Models/PracticeItem.swift`: 名前、説明、順番、基本設定など
+   - `Models/UserSettings.swift`: アプリ全体の設定
+
+2. 基本UI実装:
+   - `Views/Menu/MenuListView.swift`: 練習メニューの一覧表示画面
+   - `Views/Menu/MenuDetailView.swift`: メニュー詳細表示
+   - `Views/Menu/MenuEditView.swift`: メニュー追加・編集
+   - `Views/PracticeItem/ItemListView.swift`: 練習項目一覧
+   - `Views/PracticeItem/ItemDetailView.swift`: 項目詳細表示
+   - `Views/PracticeItem/ItemEditView.swift`: 項目追加・編集
+
+3. データ操作機能:
+   - `Services/DataManager.swift`: データ操作基本機能実装
+   - `@Environment(\.modelContext)` を利用したCRUD操作の実装
+   - 基本的なエラーハンドリング
+
+4. テスト:
+   - 基本的なCRUD操作のユニットテスト
+   - SwiftUIのプレビュー機能でUIの基本確認
 
 ### フェーズ 2: メトロノーム機能実装と連携 (MVPコア - Part 2)
 
 目標: 独立したメトロノーム機能を実装し、練習項目と連携させる。MVPのコア機能完成。
-タスク:
-AVFoundation (または必要なら Core Audio) を利用してメトロノームエンジンを実装するクラス/構造体を作成。
-指定されたBPMで正確なタイミングでイベントを発生させる。
-クリック音ファイルを再生する (AVAudioPlayer 等)。
-SwiftUIでメトロノーム用のシンプルなコントロールUIを作成（再生/停止ボタン、BPM表示・設定スライダー/テキストフィールド）。
-SwiftData モデル (PracticeItem) にメトロノーム関連の属性を追加 (bpm: Int, timeSignatureNumerator: Int, timeSignatureDenominator: Int, totalBars: Int, repeatCount: Int)。
-練習項目の詳細画面でメトロノーム設定を入力できるようにUIを修正。
-練習メニュー画面または練習項目詳細画面から、「この設定でメトロノームを開始」するボタンを追加し、メトロノームエンジンと連携させる。
-メトロノーム機能とデータ連携のテスト。
+
+#### タスク
+
+1. メトロノームモデルとエンジン:
+   - `Models/MetronomeSettings.swift`: BPM、拍子、小節数などの設定
+   - `Services/MetronomeEngine.swift`: AVFoundationを使用したメトロノーム基本機能
+   - `Resources/Sounds/Metronome/`: 基本的なクリック音を用意
+
+2. メトロノームUI:
+   - `Views/Practice/MetronomeView.swift`: メトロノーム操作UI
+   - `Views/Components/CommonButtons.swift`: 再生/停止など共通ボタン
+   - BPM設定のスライダー/入力フィールド実装
+
+3. 練習項目との連携:
+   - `PracticeItem` モデルに `metronomeSettings` 関連付け
+   - 練習項目からメトロノーム設定を読み込み・保存する機能
+   - 練習中にメトロノーム設定を変更した場合の保存確認機能
+
+4. テスト:
+   - メトロノームの正確性テスト
+   - UIとの連携テスト
+   - 異なるデバイス環境での動作確認
 
 ### フェーズ 3: メトロノーム機能拡張
 
 目標: メトロノーム機能を要件に合わせて拡張する。
-タスク:
-BPM自動段階上昇機能の実装 (指定範囲、刻み幅、小節数/繰り返し回数に応じた制御)。
-アクセント機能の実装 (拍の頭で異なる音を鳴らすなど)。
-クリック音の選択機能の実装 (複数の音声ファイルを用意し、選択できるようにする)。
-UIの改善とテスト。
+
+#### タスク
+
+1. アクセント機能:
+   - `Services/MetronomeAccentService.swift`: 拍子に応じたアクセント制御
+   - アクセント用の音声ファイル追加
+   - メトロノーム設定UIにアクセント設定追加
+
+2. BPM自動段階上昇機能:
+   - `Services/BpmProgressionService.swift`: 段階的BPM上昇ロジック
+   - 開始BPM、目標BPM、増加量、切替タイミングの設定UI
+   - 練習項目設定への保存機能
+
+3. クリック音カスタマイズ:
+   - 複数の音源ファイル追加と選択UI
+   - ユーザー設定への保存機能
+   - `Resources/Sounds/Metronome/` に複数の音源ファイル追加
+
+4. UIの改善とテスト:
+   - 視覚的フィードバック機能（拍子に合わせたアニメーション）
+   - 全機能の統合テスト
 
 ### フェーズ 4: 録音機能実装
 
 目標: 基本的な録音機能を追加し、練習項目と紐付ける。
-タスク:
-AVFoundation (AVAudioEngine, AVAudioRecorder) を利用して録音機能を実装。
-入力ソースの選択機能 (内蔵マイク/接続されている外部インターフェースをリストアップ)。AVAudioSession を使用。
-可能な範囲での入力ゲイン調整機能 (システム設定への誘導 or AVAudioEngine での制御)。
-MP3形式への変換・保存処理 を実装。別途ライブラリ (例: LAME via C bridge) または AVAssetExportSession (対応形式に注意) が必要になる可能性あり。まずはAAC(.m4a)などOS標準で簡単な形式で実装し、後でMP3変換を追加するのも手。
-録音ファイルの再生機能 (AVAudioPlayer)。
-SwiftData モデル (PracticeItem) に録音データへの参照（ファイルパスなど）を保存する属性を追加。
-練習画面に録音開始/停止ボタンを追加し、録音データを該当の練習項目と紐付けて保存。
-録音・再生機能のテスト。
+
+#### タスク
+
+1. 録音基本機能:
+   - `Models/RecordingInfo.swift`: 録音情報モデルの作成
+   - `Services/AudioRecorder.swift`: AVAudioRecorderを使用した録音制御
+   - `Services/AudioInputManager.swift`: 入力ソース選択・管理
+
+2. 録音設定と操作UI:
+   - `Views/Practice/RecordingView.swift`: 録音制御UI
+   - `Views/Components/AudioWaveformView.swift`: 波形表示コンポーネント
+   - 入力レベルメーター実装
+
+3. ファイル処理:
+   - `Utilities/AudioConverter.swift`: MP3/AAC変換機能
+   - `Services/FileManager.swift`: 録音ファイルの保存・管理
+   - ファイル命名規則の実装（日時+項目名など）
+
+4. 練習項目との連携:
+   - `PracticeItem` と `RecordingInfo` の関連付け
+   - 録音リスト表示と再生機能
+   - 録音メタデータ（日時、長さ、評価メモなど）の保存
+
+5. テスト:
+   - 録音・再生機能のテスト
+   - 長時間録音の安定性テスト
+   - 異なる入力ソースでのテスト
 
 ### フェーズ 5: データ同期 (CloudKit)
 
 目標: 練習メニューや設定、録音メタデータをiCloudで同期させる。
-タスク:
-Apple Developer Program への登録が必要。
-Xcode プロジェクト設定で iCloud (CloudKit) を有効化し、コンテナを作成。
-SwiftData のデータモデルに CloudKit 同期の設定を追加 (@Model の cloudKitContainerIdentifier 等)。
-録音ファイル本体は同期対象外となるよう、モデル設計（ファイルパスのみ保存など）を再確認。
-異なるデバイス (Mac/iOSシミュレータ/実機) 間でデータが同期されることをテスト。同期競合の基本的なハンドリングを確認。
+
+#### タスク
+
+1. iCloud環境設定:
+   - Apple Developer Programへの登録
+   - Xcodeプロジェクト設定でiCloud(CloudKit)有効化
+   - CloudKitコンテナ設定
+
+2. SwiftDataとCloudKitの連携:
+   - `@Model` モデルにcloudKitContainerIdentifier設定追加
+   - `Services/CloudSyncManager.swift`: 同期状態管理・監視
+   - 非同期データのローカル管理機能
+
+3. 録音ファイル管理:
+   - ファイル実体は同期対象外に設定
+   - メタデータのみ同期する設計確認
+   - デバイス固有ファイルパスの取り扱い
+
+4. テストと検証:
+   - 複数デバイス間での同期テスト
+   - 同期競合の基本的なハンドリング検証
+   - オフライン操作と再接続時の同期確認
 
 ### フェーズ 6: 音源再生機能
 
 目標: 外部音源ファイルをインポートし、再生コントロールを可能にする。
-タスク:
-AVFoundation (AVPlayer) を利用した基本的な音源再生機能の実装。
-ファイルインポート機能の実装:
-Files App (Document Picker) を利用してローカルやiCloud Drive上のファイルを選択させる。
-セキュリティスコープを利用してファイルアクセス権を保持。
-(オプション) Google Drive/Dropbox API連携は初期スコープでは複雑なため、Files App経由を推奨。
-SwiftData モデルにインポートした音源ファイルの情報（ブックマークデータ等）を保存する属性を追加。
-A-Bループ機能の実装 (AVPlayer の再生範囲指定)。
-テンポ変更・ピッチ変更機能の実装 (AVAudioEngine と AVAudioUnitTimePitch)。音質劣化に注意。
-音源再生と録音の同時再生機能（AVAudioEngine を使うと制御しやすい）。音量バランス調整UIの実装。
-テスト。
 
-### フェーズ 7: 付加機能と仕上げ
+#### タスク
 
-目標: 残りの要件を実装し、アプリ全体の品質を高める。
-タスク:
-自己評価機能の実装 (UIとデータ保存)。
-テンプレート機能の実装 (事前定義されたメニュー/項目をコピーして利用)。
-全体的なUI/UXの見直しと改善 (標準コンポーネントの範囲で)。
-エラーハンドリングの強化。
-必要に応じて単体テスト・UIテストを追加。
-アイコン作成、App Store提出に向けた準備（プライバシーポリシー等）。
+1. 音源ファイル管理:
+   - `Models/AudioSourceInfo.swift`: 音源ファイル情報モデル
+   - `Utilities/SecurityScopeManager.swift`: セキュリティスコープアクセス管理
+   - ファイルブックマーク保存・復元機能
+
+2. ファイルインポート:
+   - Document Picker実装（iOS/macOS対応）
+   - `Extensions/AVFoundation+Extensions.swift`: メディア情報取得拡張
+   - インポートファイルの基本情報抽出（長さ、形式など）
+
+3. 再生機能実装:
+   - `Services/AudioPlayer.swift`: AVPlayerを使用した再生制御
+   - `Views/Practice/AudioPlayerView.swift`: 再生コントロールUI
+   - シークバー、再生速度コントロール実装
+
+4. 高度な再生機能:
+   - `Views/Components/ABLoopControlView.swift`: A-Bループ設定UI
+   - `Views/Components/TempoControlView.swift`: テンポ変更UI
+   - `Views/Components/PitchControlView.swift`: ピッチ変更UI
+   - `Services/AudioEffectProcessor.swift`: AVAudioEngineによる音声処理
+
+5. 練習項目との連携:
+   - `PracticeItem` と `AudioSourceInfo` の関連付け
+   - 音源と録音の同時再生機能
+   - 音量バランス調整UI
+
+6. テスト:
+   - 様々な形式のファイルでのテスト
+   - エフェクト処理の音質・パフォーマンステスト
+   - UIの使いやすさ検証
+
+### フェーズ 7: 自己評価と練習テンプレート機能
+
+目標: 自己評価機能とテンプレート機能を実装する。
+
+#### タスク
+
+1. 自己評価機能:
+   - `Models/SelfEvaluation.swift`: 自己評価モデル
+   - `Views/Components/SelfEvaluationView.swift`: 評価入力UI
+   - 評価履歴の表示と分析機能
+
+2. テンプレート機能:
+   - `Models/MenuTemplate.swift`: テンプレートモデル
+   - `Services/TemplateManager.swift`: テンプレート管理
+   - `Views/Menu/MenuTemplatesView.swift`: テンプレート一覧・選択UI
+   - 事前定義テンプレートの作成とカスタムテンプレート保存機能
+
+3. 機能連携:
+   - 練習完了時の自動評価リマインド
+   - テンプレートからの新規メニュー作成フロー
+   - データモデル間の関連付け最終調整
+
+4. テスト:
+   - 一連の使用フローテスト
+   - データの整合性検証
+
+### フェーズ 8: UI/UX改善と最終仕上げ
+
+目標: アプリ全体の品質を高め、ユーザビリティを向上させる。
+
+#### タスク
+
+1. 全体的なUI/UX改善:
+   - ナビゲーションフローの最適化
+   - エラー表示・ユーザーフィードバックの改善
+   - アクセシビリティ対応（VoiceOver等）
+
+2. パフォーマンス最適化:
+   - SwiftDataクエリの最適化
+   - 音声処理の効率化
+   - メモリ使用量の確認と最適化
+
+3. エラーハンドリング強化:
+   - エッジケースの対応
+   - クラッシュ防止策の実装
+   - 復旧機能の強化
+
+4. 最終準備:
+   - アイコン作成
+   - App Store提出準備（スクリーンショット、説明文等）
+   - プライバシーポリシー作成
 
 ## 4. 開発Tips
 
-小さく始める: 各フェーズの中でも、さらに小さなステップに分割して進める。
-学習と実践: 初めての技術要素については、公式ドキュメント (Apple Developer) やチュートリアルで学習しながら進める。
-AI支援の活用: Cursor 等のAIツールをコード生成、デバッグ、不明点の質問に積極的に活用する。
-バージョン管理: Git でこまめにコミットし、ブランチを活用して機能開発を行う。
-テスト: 各機能が実装できたら、必ず動作確認・テストを行う。
+1. 小さく始める: 各フェーズの中でも、さらに小さなステップに分割して進める。
+   - まず基本機能のみ実装し、動作確認後に拡張機能を追加
+   - UIはシンプルに始め、機能が安定したら洗練させる
+
+2. 学習と実践: 初めての技術要素については、公式ドキュメントやチュートリアルで学習しながら進める。
+   - Apple Developer Documentation
+   - WWDC動画（特にSwiftData, AVFoundation関連）
+   - SwiftUI/AVFoundationチュートリアル
+
+3. AI支援の活用: Cursor等のAIツールを積極的に活用する。
+   - コード生成
+   - デバッグ支援
+   - 不明点の質問
+   - リファクタリング提案
+
+4. バージョン管理: Gitを効果的に活用する。
+   - 機能ごとにブランチを作成
+   - こまめなコミット
+   - 適切なコミットメッセージ
+   - プルリクエストを使った自己レビュー
+
+5. テスト重視: 各機能の実装後、必ず以下のテストを行う。
+   - ユニットテスト（コアロジック）
+   - UI動作確認
+   - エッジケースの検証
+   - 異なるデバイスでの確認（iPhone/iPad/Mac）
