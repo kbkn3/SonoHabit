@@ -275,20 +275,13 @@ struct PracticeView: View {
     private func loadRecordings() {
         // SwiftDataのリレーションから録音情報を取得
         recordings = item.recordings.sorted {
-            // 日付が取得できない場合は末尾に表示
-            guard let date1 = getDateIfAvailable($0),
-                  let date2 = getDateIfAvailable($1) else {
-                return false
-            }
-            return date1 > date2
+            $0.recordedAt > $1.recordedAt
         }
     }
 
     // 安全に日付を取得するヘルパーメソッド
-    private func getDateIfAvailable(_ recording: RecordingInfo) -> Date? {
-        // recordedAtプロパティが存在すればそれを使用
-        // コンパイラエラー回避のためのワークアラウンド
-        return (recording as? any Hashable as? RecordingInfo)?.recordedAt ?? Date()
+    private func getDateIfAvailable(_ recording: RecordingInfo) -> Date {
+        return recording.recordedAt
     }
 
     // 録音の削除
@@ -297,7 +290,7 @@ struct PracticeView: View {
 
         // UIを更新
         loadRecordings()
-        if selectedRecording?.id == recording.id {
+        if selectedRecording == recording {
             selectedRecording = nil
         }
     }
@@ -328,11 +321,7 @@ struct PracticeView: View {
     private func recordingDisplayName(_ recording: RecordingInfo) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM/dd HH:mm"
-
-        if let date = getDateIfAvailable(recording) {
-            return "録音: \(formatter.string(from: date))"
-        }
-        return "録音"
+        return "録音: \(formatter.string(from: recording.recordedAt))"
     }
 
     // ファイルサイズのフォーマット
@@ -348,12 +337,7 @@ struct PracticeView: View {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
-
-        // ワークアラウンドとして、日付を直接フォーマット
-        if let date = getDateIfAvailable(recording) {
-            return formatter.string(from: date)
-        }
-        return "日付不明"
+        return formatter.string(from: recording.recordedAt)
     }
 }
 
@@ -367,7 +351,7 @@ struct PracticeView: View {
 
         let item = PracticeItem(
             name: "スケール練習",
-            description: "Cメジャースケール",
+            itemDescription: "Cメジャースケール",
             bpm: 100,
             autoIncreaseBPM: true,
             maxBPM: 120,

@@ -1,11 +1,6 @@
 import Foundation
 import SwiftData
 
-// モデルの前方宣言
-class RecordingInfo {}
-class AudioSourceInfoModel {}
-class PracticeMenu {}
-
 // 自己評価用の埋め込みモデル
 struct SelfEvaluation: Codable, Hashable {
     var date: Date
@@ -45,15 +40,15 @@ final class PracticeItem {
     var bpmIncrement: Int?
 
     // 関連
-    // TODO: Add these relationships back once model classes are fully defined
+    // 注：循環参照を避けるため、一時的にコメントアウト
     // @Relationship(deleteRule: .noAction)
     // var menu: PracticeMenu?
 
-    // @Relationship(deleteRule: .cascade, inverse: \RecordingInfo.practiceItem)
-    // var recordings: [RecordingInfo] = []
+    @Relationship(deleteRule: .cascade, inverse: \RecordingInfo.practiceItem)
+    var recordings: [RecordingInfo] = []
 
-    // @Relationship(deleteRule: .cascade, inverse: \AudioSourceInfoModel.practiceItem)
-    // var audioSources: [AudioSourceInfoModel] = []
+    @Relationship(deleteRule: .cascade, inverse: \AudioSourceInfoModel.practiceItem)
+    var audioSources: [AudioSourceInfoModel] = []
 
     // 評価履歴
     @Transient
