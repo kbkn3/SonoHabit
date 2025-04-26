@@ -47,7 +47,13 @@
 #### 残課題:
 
 1. **メトロノーム音声ファイル**
-   - サンプルのクリック音を追加する必要あり
+   - サンプルのクリック音を追加する必要あり -＞ 手動で追加した
+     - `SonoHabit/Resources/Sounds/Metronome/bongo.wav`
+     - `SonoHabit/Resources/Sounds/Metronome/bongo_accent.wav`
+     - `SonoHabit/Resources/Sounds/Metronome/click.wav`
+     - `SonoHabit/Resources/Sounds/Metronome/click_accent.wav`
+     - `SonoHabit/Resources/Sounds/Metronome/woodblock.wav`
+     - `SonoHabit/Resources/Sounds/Metronome/woodblock_accent.wav`
 
 #### 次のステップ:
 
