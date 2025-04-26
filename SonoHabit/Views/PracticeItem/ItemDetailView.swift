@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AVFoundation
 
 struct ItemDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -45,9 +46,9 @@ struct ItemDetailView: View {
                         .font(.caption)
                 }
                 
-                if !item.description.isEmpty {
+                if !item.itemDescription.isEmpty {
                     Section("説明") {
-                        Text(item.description)
+                        Text(item.itemDescription)
                     }
                 }
             }
@@ -154,7 +155,7 @@ struct ItemDetailView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     editedName = item.name
-                    editedDescription = item.description
+                    editedDescription = item.itemDescription
                     showEditItem = true
                 } label: {
                     Image(systemName: "pencil")
@@ -242,7 +243,7 @@ struct ItemDetailView: View {
             NavigationStack {
                 if let settings = item.metronomeSettings {
                     ZStack {
-                        Color(UIColor.systemBackground).ignoresSafeArea()
+                        Color(.background).ignoresSafeArea()
                         
                         VStack {
                             Text(item.name)
@@ -277,7 +278,7 @@ struct ItemDetailView: View {
     
     private func saveChanges() {
         item.name = editedName
-        item.description = editedDescription
+        item.itemDescription = editedDescription
         DataManager.shared.updateItem(item, context: modelContext)
     }
     
@@ -344,10 +345,7 @@ struct RecordingListView: View {
         }
         
         do {
-            let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playback)
-            try audioSession.setActive(true)
-            
+            // macOSではAVAudioSessionは使用しない
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.prepareToPlay()
             audioPlayer?.play()

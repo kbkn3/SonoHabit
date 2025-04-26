@@ -77,7 +77,9 @@ class DataManager {
     /// 特定のメニューに属する全ての練習項目を取得
     func getItemsForMenu(_ menu: PracticeMenu, context: ModelContext) -> [PracticeItem] {
         let descriptor = FetchDescriptor<PracticeItem>(
-            predicate: #Predicate { $0.menu?.id == menu.id },
+            predicate: #Predicate { 
+                $0.menu != nil && $0.menu?.persistentModelID == menu.persistentModelID
+            },
             sortBy: [SortDescriptor(\.order, order: .forward)]
         )
         

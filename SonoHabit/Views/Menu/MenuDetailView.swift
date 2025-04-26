@@ -35,8 +35,8 @@ struct MenuDetailView: View {
                             VStack(alignment: .leading) {
                                 Text(item.name)
                                     .font(.headline)
-                                if !item.description.isEmpty {
-                                    Text(item.description)
+                                if !item.itemDescription.isEmpty {
+                                    Text(item.itemDescription)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -50,8 +50,12 @@ struct MenuDetailView: View {
         }
         .navigationTitle(menu.name)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                EditButton()
+            ToolbarItem {
+                Button(action: {
+                    // macOSでは編集モードを切り替えるカスタム実装が必要
+                }) {
+                    Image(systemName: "pencil")
+                }
             }
             ToolbarItem {
                 Menu {

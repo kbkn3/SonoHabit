@@ -75,7 +75,7 @@ struct LevelMeterView: View {
     var level: Float // 0.0-1.0の範囲
     var width: CGFloat = 200
     var height: CGFloat = 20
-    var backgroundColor: Color = Color(.systemGray5)
+    var backgroundColor: Color = Color.gray.opacity(0.3)
     var foregroundColor: Color = .blue
     var warningLevel: Float = 0.8
     var peakLevel: Float = 0.95
@@ -135,7 +135,7 @@ struct RecordingTimerView: View {
         AudioWaveformView(level: 0.7)
             .frame(height: 60)
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color.gray.opacity(0.2))
             .cornerRadius(8)
         
         LevelMeterView(level: 0.7)

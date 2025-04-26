@@ -9,8 +9,8 @@ final class PracticeMenu {
     var order: Int
     var isActive: Bool
     
-    @Relationship(deleteRule: .cascade, inverse: \PracticeItem.menu)
-    var items: [PracticeItem] = []
+    @Relationship(deleteRule: .cascade)
+    var items: [PracticeItem]
     
     init(name: String, order: Int = 0, isActive: Bool = true) {
         self.name = name
@@ -18,5 +18,6 @@ final class PracticeMenu {
         self.updatedAt = Date()
         self.order = order
         self.isActive = isActive
+        self.items = []
     }
 } 

@@ -3,13 +3,24 @@ import AVFoundation
 import Combine
 
 /// 録音機能を提供するクラス
-class AudioRecorder: ObservableObject {
+class AudioRecorder: NSObject, ObservableObject {
     // 録音の状態
-    enum RecordingState {
-        case stopped       // 停止中
-        case recording     // 録音中
-        case paused        // 一時停止中
-        case error(String) // エラー
+    enum RecordingState: Equatable {
+        case stopped
+        case recording
+        case paused
+        case error(String)
+        
+        static func == (lhs: RecordingState, rhs: RecordingState) -> Bool {
+            switch (lhs, rhs) {
+            case (.stopped, .stopped), (.recording, .recording), (.paused, .paused):
+                return true
+            case (.error(let lhsMessage), .error(let rhsMessage)):
+                return lhsMessage == rhsMessage
+            default:
+                return false
+            }
+        }
     }
     
     // 公開プロパティ
@@ -22,7 +33,7 @@ class AudioRecorder: ObservableObject {
     var fileFormat: RecordingInfo.AudioFileFormat = .m4a
     var sampleRate: Int = 44100
     var bitRate: Int = 128000
-    var meterUpdateInterval: TimeInterval = 0.05
+    var meterUpdateInterval: TimeInterval = 0.1
     
     // プライベートプロパティ
     private var audioRecorder: AVAudioRecorder?
@@ -32,74 +43,37 @@ class AudioRecorder: ObservableObject {
     private var inputManager: AudioInputManager?
     private var recordingFilePath: URL?
     
-    // 初期化
-    init(inputManager: AudioInputManager? = nil) {
-        self.inputManager = inputManager
+    override init() {
+        super.init()
+        inputManager = AudioInputManager()
     }
     
     deinit {
         stopRecording()
     }
     
-    /// 録音を開始
-    func startRecording(title: String = "録音", practiceItemId: String? = nil) -> URL? {
-        // すでに録音中の場合は何もしない
-        if case .recording = state { return recordingFilePath }
-        
-        // 一時停止中なら再開
-        if case .paused = state {
-            resumeRecording()
+    /// 録音開始
+    func startRecording(title: String = "録音") -> URL? {
+        // 既に録音中なら何もしない
+        if case .recording = state {
             return recordingFilePath
         }
         
-        // オーディオセッションをセットアップ
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(.playAndRecord, options: [.defaultToSpeaker, .allowBluetooth])
-            try audioSession.setActive(true)
-        } catch {
-            state = .error("オーディオセッション設定エラー: \(error.localizedDescription)")
-            return nil
-        }
+        // 録音の準備
+        setupRecording()
         
-        // 録音ファイルのパスを生成
-        let fileName = "\(title)_\(DateFormatter.filenameDateFormatter.string(from: Date())).\(fileFormat.fileExtension)"
-        
-        // 録音フォルダの作成と取得
-        guard let directoryURL = getOrCreateRecordingsDirectory() else {
-            state = .error("録音ディレクトリの作成に失敗しました")
-            return nil
-        }
-        
-        let fileURL = directoryURL.appendingPathComponent(fileName)
-        recordingFilePath = fileURL
-        
-        // 録音の設定
-        let settings: [String: Any] = [
-            AVFormatIDKey: getFormatID(),
-            AVSampleRateKey: sampleRate,
-            AVNumberOfChannelsKey: 2,
-            AVEncoderBitRateKey: bitRate,
-            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
-        ]
-        
-        // レコーダーの作成
-        do {
-            audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
-            audioRecorder?.delegate = self
-            audioRecorder?.isMeteringEnabled = isPeakMeterEnabled
-            
-            if audioRecorder?.record() == true {
+        if let audioRecorder = audioRecorder {
+            if audioRecorder.record() {
                 state = .recording
                 recordingStartTime = Date()
                 startMeterTimer()
-                return fileURL
+                return recordingFilePath
             } else {
                 state = .error("録音の開始に失敗しました")
                 return nil
             }
-        } catch {
-            state = .error("録音設定エラー: \(error.localizedDescription)")
+        } else {
+            state = .error("録音の初期化に失敗しました")
             return nil
         }
     }
@@ -138,34 +112,31 @@ class AudioRecorder: ObservableObject {
     @discardableResult
     func stopRecording() -> URL? {
         // 録音中または一時停止中でなければ何もしない
-        guard case .recording = state || case .paused = state, 
-              let audioRecorder = audioRecorder else { 
+        guard let audioRecorder = audioRecorder else { 
             return nil
         }
         
-        // メーターの更新を停止
-        stopMeterTimer()
-        
-        // 録音を停止
-        audioRecorder.stop()
-        
-        let url = recordingFilePath
-        
-        // 状態をリセット
-        state = .stopped
-        elapsedTime = 0
-        recordingStartTime = nil
-        recordingPausedTime = 0
-        peakPower = 0.0
-        
-        // オーディオセッションを非アクティブにする（必要に応じて）
-        do {
-            try AVAudioSession.sharedInstance().setActive(false)
-        } catch {
-            print("オーディオセッション非アクティブ化エラー: \(error.localizedDescription)")
+        let isRecordingOrPaused = (case .recording = state) || (case .paused = state)
+        if isRecordingOrPaused {
+            // メーターの更新を停止
+            stopMeterTimer()
+            
+            // 録音を停止
+            audioRecorder.stop()
+            
+            let url = recordingFilePath
+            
+            // 状態をリセット
+            state = .stopped
+            elapsedTime = 0
+            recordingStartTime = nil
+            recordingPausedTime = 0
+            peakPower = 0.0
+            
+            return url
+        } else {
+            return nil
         }
-        
-        return url
     }
     
     /// メーター更新タイマーを開始
@@ -189,11 +160,15 @@ class AudioRecorder: ObservableObject {
         
         audioRecorder.updateMeters()
         
-        // 全チャンネルの最大ピークパワーを取得
+        // macOSでは全チャンネルの最大ピークパワーを取得（チャンネル数は固定で1か2として扱う）
         var maxPower: Float = -160.0 // 最小値
-        for i in 0..<audioRecorder.numberOfChannels {
-            let power = audioRecorder.peakPower(forChannel: i)
-            maxPower = max(maxPower, power)
+        let channelCount = 2 // macOSでは固定値として扱う
+        
+        for i in 0..<channelCount {
+            if i < 2 { // 安全のため2チャンネルまでとする
+                let power = audioRecorder.peakPower(forChannel: i)
+                maxPower = max(maxPower, power)
+            }
         }
         
         // デシベルを0-1の範囲に変換（-60dBから0dBを0-1にマッピング）
@@ -257,8 +232,8 @@ class AudioRecorder: ObservableObject {
             let asset = AVAsset(url: url)
             let duration = CMTimeGetSeconds(asset.duration)
             
-            // 入力ソースの情報
-            let inputSourceName = inputManager?.selectedInput?.portName
+            // 入力ソース情報（macOSの場合は別の方法で取得）
+            let inputSourceName = inputManager?.selectedInput ?? "デフォルト入力"
             
             // RecordingInfoオブジェクトを作成
             let recordingInfo = RecordingInfo(
@@ -276,6 +251,52 @@ class AudioRecorder: ObservableObject {
         } catch {
             print("録音情報の取得エラー: \(error.localizedDescription)")
             return nil
+        }
+    }
+    
+    /// 録音の準備
+    private func setupRecording() {
+        // 録音中なら停止
+        if case .recording = state {
+            stopRecording()
+        }
+        
+        // 録音ファイルのパスを作成
+        guard let recordingsDir = getOrCreateRecordingsDirectory() else {
+            state = .error("録音ディレクトリの取得に失敗しました")
+            return
+        }
+        
+        let fileName = "Recording_\(DateFormatter.filenameDateFormatter.string(from: Date())).\(fileFormat.fileExtension)"
+        recordingFilePath = recordingsDir.appendingPathComponent(fileName)
+        
+        // 録音設定
+        let settings: [String: Any] = [
+            AVFormatIDKey: getFormatID(),
+            AVSampleRateKey: sampleRate,
+            AVNumberOfChannelsKey: 2,
+            AVEncoderBitRateKey: bitRate,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        ]
+        
+        // macOSではAVAudioSessionは使用しません
+        
+        do {
+            // レコーダーの初期化
+            audioRecorder = try AVAudioRecorder(url: recordingFilePath!, settings: settings)
+            audioRecorder?.delegate = self
+            audioRecorder?.isMeteringEnabled = isPeakMeterEnabled
+            
+            if let audioRecorder = audioRecorder, audioRecorder.prepareToRecord() {
+                state = .stopped
+                elapsedTime = 0
+                recordingPausedTime = 0
+                peakPower = 0.0
+            } else {
+                state = .error("録音の準備に失敗しました")
+            }
+        } catch {
+            state = .error("録音の初期化エラー: \(error.localizedDescription)")
         }
     }
 }

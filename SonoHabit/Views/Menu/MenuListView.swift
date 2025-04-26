@@ -6,6 +6,7 @@ struct MenuListView: View {
     @Query(sort: \PracticeMenu.order) private var menus: [PracticeMenu]
     @State private var showAddMenu = false
     @State private var newMenuName = ""
+    @State private var isEditing = false
     
     var body: some View {
         NavigationStack {
@@ -22,13 +23,17 @@ struct MenuListView: View {
                         }
                     }
                 }
-                .onDelete(perform: deleteMenus)
-                .onMove(perform: moveMenus)
+                .onDelete(perform: isEditing ? deleteMenus : nil)
+                .onMove(perform: isEditing ? moveMenus : nil)
             }
             .navigationTitle("練習メニュー")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                ToolbarItem {
+                    Button(action: {
+                        isEditing.toggle()
+                    }) {
+                        Text(isEditing ? "完了" : "編集")
+                    }
                 }
                 ToolbarItem {
                     Button(action: {

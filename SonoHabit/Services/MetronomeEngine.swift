@@ -136,14 +136,8 @@ class MetronomeEngine: ObservableObject {
     
     /// オーディオエンジンのセットアップ
     private func setupAudio() {
-        // オーディオセッションの設定
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(.playback, mode: .default)
-            try audioSession.setActive(true)
-        } catch {
-            print("オーディオセッションの設定エラー: \(error.localizedDescription)")
-        }
+        // オーディオセッションの設定 (macOS用に修正)
+        // macOSでは特別なオーディオセッション設定は通常不要
         
         // リソースがない場合は音声ファイルが追加されていないと想定
         guard let clickURL = Bundle.main.url(forResource: clickSound.normalFilename, withExtension: "wav"),

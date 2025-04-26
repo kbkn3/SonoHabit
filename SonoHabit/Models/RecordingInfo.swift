@@ -21,7 +21,7 @@ class RecordingInfo {
     var evaluationNotes: String
     
     // 関連付け
-    @Relationship(deleteRule: .cascade, inverse: \PracticeItem.recordings)
+    @Relationship(deleteRule: .cascade)
     var practiceItem: PracticeItem?
     
     // 録音ファイル形式

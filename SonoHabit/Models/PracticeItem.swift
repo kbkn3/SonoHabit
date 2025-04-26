@@ -4,7 +4,7 @@ import SwiftData
 @Model
 final class PracticeItem {
     var name: String
-    var description: String
+    var itemDescription: String
     var createdAt: Date
     var updatedAt: Date
     var order: Int
@@ -14,12 +14,16 @@ final class PracticeItem {
     var useRecording: Bool
     var useAudioSource: Bool
     
-    @Relationship(deleteRule: .nullify, inverse: \PracticeMenu.items)
+    @Relationship(deleteRule: .nullify)
     var menu: PracticeMenu?
     
     // 関連モデルへの参照
-    @Relationship(deleteRule: .cascade) var metronomeSettings: MetronomeSettings?
-    @Relationship(deleteRule: .cascade) var recordings: [RecordingInfo] = []
+    @Relationship(deleteRule: .cascade)
+    var metronomeSettings: MetronomeSettings?
+    
+    @Relationship(deleteRule: .cascade, inverse: \RecordingInfo.practiceItem) 
+    var recordings: [RecordingInfo] = []
+    
     // @Relationship var audioSourceInfo: AudioSourceInfo?
     // @Relationship var selfEvaluations: [SelfEvaluation] = []
     
@@ -31,7 +35,7 @@ final class PracticeItem {
          useRecording: Bool = false,
          useAudioSource: Bool = false) {
         self.name = name
-        self.description = description
+        self.itemDescription = description
         self.createdAt = Date()
         self.updatedAt = Date()
         self.order = order
