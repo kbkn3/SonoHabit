@@ -36,6 +36,43 @@ struct ItemEditView: View {
                                 Text("拍子: \(settings.timeSignature.rawValue)")
                             }
                             
+                            HStack {
+                                if settings.isAccentEnabled {
+                                    Label(
+                                        "アクセント: \(settings.accentPattern.displayName)",
+                                        systemImage: "speaker.wave.2"
+                                    )
+                                    .font(.caption)
+                                } else {
+                                    Label(
+                                        "アクセント: オフ",
+                                        systemImage: "speaker.slash"
+                                    )
+                                    .font(.caption)
+                                }
+                                
+                                Spacer()
+                                
+                                Text("小節数: \(settings.measuresCount)")
+                                    .font(.caption)
+                            }
+                            
+                            if settings.isProgressionEnabled, let targetBpm = settings.targetBpm {
+                                let direction = targetBpm > settings.bpm ? "上昇" : "下降"
+                                HStack {
+                                    Label(
+                                        "BPM変化: \(settings.bpm)→\(targetBpm)",
+                                        systemImage: "arrow.up.forward"
+                                    )
+                                    .font(.caption)
+                                    
+                                    Spacer()
+                                    
+                                    Text("\(settings.bpmIncrement)BPM/\(settings.incrementIntervalValue)\(settings.incrementInterval == .measures ? "小節" : "秒")")
+                                        .font(.caption)
+                                }
+                            }
+                            
                             Button("設定を編集") {
                                 showMetronomeSettings = true
                             }

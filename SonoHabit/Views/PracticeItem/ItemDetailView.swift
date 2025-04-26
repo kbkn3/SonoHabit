@@ -9,9 +9,31 @@ struct ItemDetailView: View {
     @State private var editedDescription: String = ""
     @State private var showMetronomeView = false
     @State private var showMetronomeSettings = false
+    @State private var showRecordingView = false
+    @State private var showRecordings = false
+    @State private var selectedRecording: RecordingInfo?
     
     // メトロノームエンジン
     @StateObject private var metronomeEngine = MetronomeEngine()
+    
+    // 録音関連
+    @StateObject private var audioRecorder = AudioRecorder()
+    @StateObject private var inputManager = AudioInputManager()
+    @Query private var recordings: [RecordingInfo] = []
+    
+    // 録音一覧クエリ用の初期化
+    init(item: PracticeItem) {
+        self.item = item
+        
+        // 録音リストのクエリを設定
+        let descriptor = FetchDescriptor<RecordingInfo>(
+            predicate: #Predicate { recording in
+                recording.practiceItem?.id == item.id
+            },
+            sortBy: [SortDescriptor(\.recordedAt, order: .reverse)]
+        )
+        self._recordings = Query(descriptor)
+    }
     
     var body: some View {
         Form {
@@ -53,7 +75,11 @@ struct ItemDetailView: View {
                             }
                             
                             if settings.isProgressionEnabled, let targetBpm = settings.targetBpm {
-                                Text("BPM自動上昇: \(settings.bpm) → \(targetBpm) BPM (+\(settings.bpmIncrement), \(settings.incrementMeasures)小節ごと)")
+                                let intervalText = settings.incrementInterval == .measures ? 
+                                    "\(settings.incrementIntervalValue)小節" : 
+                                    "\(settings.incrementIntervalValue)秒"
+                                
+                                Text("BPM自動変化: \(settings.bpm) → \(targetBpm) BPM (+\(settings.bpmIncrement), \(intervalText)ごと)")
                                     .font(.caption)
                             }
                             
@@ -69,6 +95,32 @@ struct ItemDetailView: View {
                             showMetronomeSettings = true
                         }
                     }
+                }
+            }
+            
+            if item.useRecording {
+                Section("録音") {
+                    HStack {
+                        Text("\(recordings.count)件の録音")
+                        
+                        Spacer()
+                        
+                        Button("一覧表示") {
+                            showRecordings = true
+                        }
+                        .disabled(recordings.isEmpty)
+                    }
+                    
+                    Button(action: {
+                        showRecordingView = true
+                    }) {
+                        Label("新規録音", systemImage: "mic")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.blue)
                 }
             }
             
@@ -154,6 +206,38 @@ struct ItemDetailView: View {
             }
             .presentationDetents([.medium, .large])
         }
+        .sheet(isPresented: $showRecordingView) {
+            NavigationStack {
+                RecordingView(
+                    practiceItem: item,
+                    audioRecorder: audioRecorder,
+                    inputManager: inputManager
+                )
+                .navigationTitle("録音")
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("完了") {
+                            showRecordingView = false
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showRecordings) {
+            NavigationStack {
+                RecordingListView(recordings: recordings, item: item)
+                    .navigationTitle("録音一覧")
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("完了") {
+                                showRecordings = false
+                            }
+                        }
+                    }
+            }
+            .presentationDetents([.medium, .large])
+        }
         .fullScreenCover(isPresented: $showMetronomeView) {
             NavigationStack {
                 if let settings = item.metronomeSettings {
@@ -206,5 +290,159 @@ struct ItemDetailView: View {
     private func updateMetronomeSettings(_ settings: MetronomeSettings) {
         item.metronomeSettings = settings
         DataManager.shared.updateItem(item, context: modelContext)
+    }
+}
+
+/// 録音一覧表示ビュー
+struct RecordingListView: View {
+    @Environment(\.modelContext) private var modelContext
+    let recordings: [RecordingInfo]
+    let item: PracticeItem
+    @State private var selectedRecording: RecordingInfo?
+    @State private var isPlaying = false
+    @State private var audioPlayer: AVAudioPlayer?
+    
+    var body: some View {
+        List {
+            if recordings.isEmpty {
+                Text("録音がありません")
+                    .foregroundColor(.secondary)
+                    .padding()
+            } else {
+                ForEach(recordings) { recording in
+                    RecordingRow(recording: recording, isSelected: selectedRecording?.id == recording.id, isPlaying: isPlaying && selectedRecording?.id == recording.id)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            handleRecordingSelection(recording)
+                        }
+                }
+                .onDelete(perform: deleteRecordings)
+            }
+        }
+    }
+    
+    private func handleRecordingSelection(_ recording: RecordingInfo) {
+        if selectedRecording?.id == recording.id {
+            // 同じ録音が選択された場合は再生/停止を切り替え
+            if isPlaying {
+                stopPlayback()
+            } else {
+                playRecording(recording)
+            }
+        } else {
+            // 別の録音が選択された場合は前の再生を停止して新しい録音を選択
+            stopPlayback()
+            selectedRecording = recording
+            playRecording(recording)
+        }
+    }
+    
+    private func playRecording(_ recording: RecordingInfo) {
+        guard let url = URL(string: "file://\(recording.filePath)") else {
+            print("録音ファイルのURLの作成に失敗しました: \(recording.filePath)")
+            return
+        }
+        
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback)
+            try audioSession.setActive(true)
+            
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.play()
+            isPlaying = true
+            
+            // 再生終了時の処理
+            audioPlayer?.delegate = PlaybackDelegate {
+                isPlaying = false
+            }
+        } catch {
+            print("録音の再生エラー: \(error.localizedDescription)")
+        }
+    }
+    
+    private func stopPlayback() {
+        audioPlayer?.stop()
+        audioPlayer = nil
+        isPlaying = false
+    }
+    
+    private func deleteRecordings(at offsets: IndexSet) {
+        // 選択中の録音が削除対象に含まれていたら再生停止
+        for index in offsets {
+            let recording = recordings[index]
+            if selectedRecording?.id == recording.id {
+                stopPlayback()
+                selectedRecording = nil
+            }
+            
+            // ファイルを削除
+            deleteRecordingFile(recording)
+            
+            // データベースから削除
+            modelContext.delete(recording)
+        }
+    }
+    
+    private func deleteRecordingFile(_ recording: RecordingInfo) {
+        // ファイルを削除
+        let fileManager = FileManager.default
+        
+        if fileManager.fileExists(atPath: recording.filePath) {
+            do {
+                try fileManager.removeItem(atPath: recording.filePath)
+            } catch {
+                print("録音ファイルの削除エラー: \(error.localizedDescription)")
+            }
+        }
+    }
+}
+
+/// 録音一覧の行表示
+struct RecordingRow: View {
+    let recording: RecordingInfo
+    let isSelected: Bool
+    let isPlaying: Bool
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(recording.title)
+                    .font(.headline)
+                
+                HStack {
+                    Text(recording.formattedDateTime)
+                    Text("・")
+                    Text(recording.formattedDuration)
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            if isPlaying {
+                Image(systemName: "speaker.wave.2.fill")
+                    .foregroundColor(.blue)
+            } else if isSelected {
+                Image(systemName: "play.fill")
+                    .foregroundColor(.blue)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// 再生完了を通知するデリゲート
+class PlaybackDelegate: NSObject, AVAudioPlayerDelegate {
+    private let completion: () -> Void
+    
+    init(completion: @escaping () -> Void) {
+        self.completion = completion
+    }
+    
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        completion()
     }
 } 

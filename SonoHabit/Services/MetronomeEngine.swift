@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import Combine
 
 /// メトロノームエンジン - 正確なタイミングでクリック音を再生する
 class MetronomeEngine: ObservableObject {
@@ -11,19 +12,32 @@ class MetronomeEngine: ObservableObject {
     @Published var currentMeasure: Int = 0
     @Published var isAccentEnabled: Bool = true
     @Published var clickSound: MetronomeSettings.ClickSound = .click
+    @Published var progressPercentage: Double = 0.0
     
     // メトロノーム設定
     private var measuresCount: Int = 4
     private var repetitionCount: Int = 0  // 0は無限繰り返し
     private var completedRepetitions: Int = 0
     
+    // アクセント設定
+    private var accentPattern: MetronomeSettings.AccentPatternType = .standard
+    private var customAccentPositions: [Int]? = nil
+    private var activeAccentPattern: [Bool] = []
+    
     // BPM自動段階上昇設定
     private var isProgressionEnabled: Bool = false
     private var startBpm: Int = 120
     private var targetBpm: Int? = nil
     private var bpmIncrement: Int = 5
-    private var incrementMeasures: Int = 4
+    private var incrementInterval: MetronomeSettings.ProgressionIntervalType = .measures
+    private var incrementIntervalValue: Int = 4
     private var measuresPlayedAtCurrentBpm: Int = 0
+    private var lastBpmChangeTime: Date?
+    
+    // サービス
+    private let accentService = MetronomeAccentService()
+    private let progressionService = BpmProgressionService()
+    private var cancellables = Set<AnyCancellable>()
     
     // オーディオ関連
     private var audioEngine: AVAudioEngine?
@@ -35,6 +49,7 @@ class MetronomeEngine: ObservableObject {
     // MARK: - 初期化
     init() {
         setupAudio()
+        setupSubscriptions()
     }
     
     // MARK: - メトロノーム制御メソッド
@@ -46,9 +61,26 @@ class MetronomeEngine: ObservableObject {
         setupAudio()
         resetCounters()
         
+        // アクセントパターンの生成
+        updateAccentPattern()
+        
         // BPM自動上昇の初期化
-        if isProgressionEnabled {
-            currentBpm = startBpm
+        if isProgressionEnabled, let targetBpm = targetBpm {
+            if incrementInterval == .seconds {
+                // 秒数ベースのBPM変更はBpmProgressionServiceを使用
+                progressionService.configure(
+                    startBpm: startBpm,
+                    targetBpm: targetBpm,
+                    stepValue: bpmIncrement,
+                    stepDuration: TimeInterval(incrementIntervalValue)
+                )
+                progressionService.start()
+                currentBpm = startBpm
+                lastBpmChangeTime = Date()
+            } else {
+                // 小節ベースのBPM変更は内部で管理
+                currentBpm = startBpm
+            }
         }
         
         isPlaying = true
@@ -61,6 +93,10 @@ class MetronomeEngine: ObservableObject {
         isPlaying = false
         timer?.invalidate()
         timer = nil
+        
+        if isProgressionEnabled && incrementInterval == .seconds {
+            progressionService.stop()
+        }
     }
     
     /// メトロノーム設定を適用
@@ -72,14 +108,22 @@ class MetronomeEngine: ObservableObject {
         isAccentEnabled = settings.isAccentEnabled
         clickSound = settings.clickSound
         
+        // アクセント設定
+        accentPattern = settings.accentPattern
+        customAccentPositions = settings.customAccentPositions
+        
         // BPM自動段階上昇設定
         isProgressionEnabled = settings.isProgressionEnabled
         if isProgressionEnabled {
             startBpm = settings.bpm
             targetBpm = settings.targetBpm
             bpmIncrement = settings.bpmIncrement
-            incrementMeasures = settings.incrementMeasures
+            incrementInterval = settings.incrementInterval
+            incrementIntervalValue = settings.incrementIntervalValue
         }
+        
+        // アクセントパターン更新
+        updateAccentPattern()
         
         // 再生中なら設定を反映
         if isPlaying {
@@ -102,9 +146,9 @@ class MetronomeEngine: ObservableObject {
         }
         
         // リソースがない場合は音声ファイルが追加されていないと想定
-        guard let clickURL = Bundle.main.url(forResource: clickSound.filename, withExtension: "wav"),
+        guard let clickURL = Bundle.main.url(forResource: clickSound.normalFilename, withExtension: "wav"),
               let accentURL = Bundle.main.url(forResource: clickSound.accentFilename, withExtension: "wav") else {
-            print("メトロノーム音ファイルが見つかりません")
+            print("メトロノーム音ファイルが見つかりません: \(clickSound.normalFilename).wav, \(clickSound.accentFilename).wav")
             return
         }
         
@@ -119,12 +163,51 @@ class MetronomeEngine: ObservableObject {
         }
     }
     
+    /// Combine購読の設定
+    private func setupSubscriptions() {
+        // BPM変更の購読
+        progressionService.bpmPublisher
+            .receive(on: RunLoop.main)
+            .sink { [weak self] newBpm in
+                self?.currentBpm = newBpm
+            }
+            .store(in: &cancellables)
+        
+        // 進行状況の購読
+        progressionService.progressPublisher
+            .receive(on: RunLoop.main)
+            .sink { [weak self] progress in
+                self?.progressPercentage = progress
+            }
+            .store(in: &cancellables)
+    }
+    
     /// カウンターをリセット
     private func resetCounters() {
         currentBeat = 0
         currentMeasure = 0
         completedRepetitions = 0
         measuresPlayedAtCurrentBpm = 0
+        progressPercentage = 0.0
+        lastBpmChangeTime = nil
+    }
+    
+    /// アクセントパターンを更新
+    private func updateAccentPattern() {
+        let beatsPerMeasure = currentTimeSignature.beatsPerMeasure
+        
+        switch accentPattern {
+        case .standard:
+            activeAccentPattern = accentService.generateAccentPattern(beatsPerMeasure: beatsPerMeasure, pattern: .standard)
+        case .offBeat:
+            activeAccentPattern = accentService.generateAccentPattern(beatsPerMeasure: beatsPerMeasure, pattern: .offBeat)
+        case .custom:
+            activeAccentPattern = accentService.generateAccentPattern(
+                beatsPerMeasure: beatsPerMeasure,
+                pattern: .custom,
+                customPattern: customAccentPositions
+            )
+        }
     }
     
     /// 次のビートをスケジュール
@@ -143,11 +226,13 @@ class MetronomeEngine: ObservableObject {
     private func playBeat() {
         let beatsPerMeasure = currentTimeSignature.beatsPerMeasure
         
-        // 拍子の1拍目かどうか
-        let isFirstBeat = currentBeat == 0
+        // アクセントパターンに基づいてアクセント音かどうかを判断
+        let shouldPlayAccent = isAccentEnabled && 
+            currentBeat < activeAccentPattern.count && 
+            activeAccentPattern[currentBeat]
         
         // アクセント音か通常音かを選択
-        if isFirstBeat && isAccentEnabled {
+        if shouldPlayAccent {
             accentPlayer?.play()
             accentPlayer?.currentTime = 0
         } else {
@@ -163,8 +248,10 @@ class MetronomeEngine: ObservableObject {
             currentMeasure = (currentMeasure + 1) % measuresCount
             measuresPlayedAtCurrentBpm += 1
             
-            // 小節の区切りでのBPM自動上昇チェック
-            checkAndIncreaseBpm()
+            // 小節の区切りでのBPM自動上昇チェック（小節ベースの場合）
+            if isProgressionEnabled && incrementInterval == .measures {
+                checkAndIncreaseBpm()
+            }
             
             // 小節が一周したら繰り返し回数をカウント
             if currentMeasure == 0 {
@@ -176,23 +263,58 @@ class MetronomeEngine: ObservableObject {
                 }
             }
         }
+        
+        // 秒数ベースのBPM変更の進行状況を更新（独自に計算）
+        if isProgressionEnabled && incrementInterval == .seconds && lastBpmChangeTime != nil {
+            updateProgressionPercentage()
+        }
     }
     
-    /// BPMの自動上昇をチェックし実行
+    /// BPMの自動上昇をチェックし実行（小節ベース）
     private func checkAndIncreaseBpm() {
-        guard isProgressionEnabled, let targetBpm = targetBpm else { return }
+        guard let targetBpm = targetBpm else { return }
         
         // 指定された小節数を超えたらBPMを上げる
-        if measuresPlayedAtCurrentBpm >= incrementMeasures && currentBpm < targetBpm {
-            currentBpm += bpmIncrement
-            
-            // 目標BPMを超えないようにする
-            if currentBpm > targetBpm {
-                currentBpm = targetBpm
+        if measuresPlayedAtCurrentBpm >= incrementIntervalValue {
+            // 目標BPMに達していない場合のみ変更
+            if (targetBpm > startBpm && currentBpm < targetBpm) || 
+               (targetBpm < startBpm && currentBpm > targetBpm) {
+                
+                // 増加または減少
+                if targetBpm > startBpm {
+                    currentBpm += bpmIncrement
+                    // 目標BPMを超えないようにする
+                    if currentBpm > targetBpm {
+                        currentBpm = targetBpm
+                    }
+                } else {
+                    currentBpm -= bpmIncrement
+                    // 目標BPMを下回らないようにする
+                    if currentBpm < targetBpm {
+                        currentBpm = targetBpm
+                    }
+                }
+                
+                // 進行状況の更新
+                updateProgressionPercentage()
             }
             
             // 測定リセット
             measuresPlayedAtCurrentBpm = 0
+        }
+    }
+    
+    /// BPMプログレッションの進行状況を更新
+    private func updateProgressionPercentage() {
+        guard let targetBpm = targetBpm else { return }
+        
+        let totalChange = abs(targetBpm - startBpm)
+        let currentChange = abs(targetBpm - currentBpm)
+        
+        if totalChange == 0 {
+            progressPercentage = 100.0
+        } else {
+            progressPercentage = Double(totalChange - currentChange) / Double(totalChange) * 100.0
         }
     }
 } 

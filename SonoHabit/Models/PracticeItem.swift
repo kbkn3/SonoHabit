@@ -19,7 +19,7 @@ final class PracticeItem {
     
     // 関連モデルへの参照
     @Relationship(deleteRule: .cascade) var metronomeSettings: MetronomeSettings?
-    // @Relationship var recordingInfo: [RecordingInfo] = []
+    @Relationship(deleteRule: .cascade) var recordings: [RecordingInfo] = []
     // @Relationship var audioSourceInfo: AudioSourceInfo?
     // @Relationship var selfEvaluations: [SelfEvaluation] = []
     
