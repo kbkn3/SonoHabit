@@ -17,8 +17,8 @@ final class PracticeItem {
     @Relationship(deleteRule: .nullify, inverse: \PracticeMenu.items)
     var menu: PracticeMenu?
     
-    // 関連モデルへの参照（後で実装）
-    // @Relationship var metronomeSettings: MetronomeSettings?
+    // 関連モデルへの参照
+    @Relationship(deleteRule: .cascade) var metronomeSettings: MetronomeSettings?
     // @Relationship var recordingInfo: [RecordingInfo] = []
     // @Relationship var audioSourceInfo: AudioSourceInfo?
     // @Relationship var selfEvaluations: [SelfEvaluation] = []
@@ -39,5 +39,10 @@ final class PracticeItem {
         self.useMetronome = useMetronome
         self.useRecording = useRecording
         self.useAudioSource = useAudioSource
+        
+        // メトロノームを使用する場合はデフォルト設定で初期化
+        if useMetronome {
+            self.metronomeSettings = MetronomeSettings()
+        }
     }
 } 

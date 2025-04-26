@@ -7,6 +7,11 @@ struct ItemDetailView: View {
     @State private var showEditItem = false
     @State private var editedName: String = ""
     @State private var editedDescription: String = ""
+    @State private var showMetronomeView = false
+    @State private var showMetronomeSettings = false
+    
+    // メトロノームエンジン
+    @StateObject private var metronomeEngine = MetronomeEngine()
     
     var body: some View {
         Form {
@@ -31,15 +36,65 @@ struct ItemDetailView: View {
                 LabeledContent("音源再生", value: item.useAudioSource ? "使用" : "未使用")
             }
             
-            Section {
-                Button("練習開始") {
-                    // 練習画面へ遷移する処理（後で実装）
+            if item.useMetronome {
+                Section("メトロノーム設定") {
+                    if let settings = item.metronomeSettings {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("テンポ: \(settings.bpm) BPM")
+                                Spacer()
+                                Text("拍子: \(settings.timeSignature.rawValue)")
+                            }
+                            
+                            HStack {
+                                Text("小節数: \(settings.measuresCount)")
+                                Spacer()
+                                Text("アクセント: \(settings.isAccentEnabled ? "あり" : "なし")")
+                            }
+                            
+                            if settings.isProgressionEnabled, let targetBpm = settings.targetBpm {
+                                Text("BPM自動上昇: \(settings.bpm) → \(targetBpm) BPM (+\(settings.bpmIncrement), \(settings.incrementMeasures)小節ごと)")
+                                    .font(.caption)
+                            }
+                            
+                            Button("設定を編集") {
+                                showMetronomeSettings = true
+                            }
+                            .padding(.top, 8)
+                        }
+                    } else {
+                        Text("メトロノーム設定が未作成です")
+                        Button("設定を作成") {
+                            createMetronomeSettings()
+                            showMetronomeSettings = true
+                        }
+                    }
                 }
-                .frame(maxWidth: .infinity)
-                .foregroundColor(.white)
-                .padding()
-                .background(Color.blue)
-                .cornerRadius(10)
+            }
+            
+            Section {
+                if item.useMetronome {
+                    Button("メトロノームで練習開始") {
+                        if item.metronomeSettings == nil {
+                            createMetronomeSettings()
+                        }
+                        showMetronomeView = true
+                    }
+                    .frame(maxWidth: .infinity)
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(10)
+                } else {
+                    Button("練習開始") {
+                        // 練習画面へ遷移する処理（後で実装）
+                    }
+                    .frame(maxWidth: .infinity)
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(10)
+                }
             }
         }
         .navigationTitle(item.name)
@@ -81,6 +136,52 @@ struct ItemDetailView: View {
             }
             .presentationDetents([.medium, .large])
         }
+        .sheet(isPresented: $showMetronomeSettings) {
+            NavigationStack {
+                if let settings = item.metronomeSettings {
+                    MetronomeView(settings: settings, onSettingsChanged: { updatedSettings in
+                        updateMetronomeSettings(updatedSettings)
+                    })
+                    .navigationTitle("メトロノーム設定")
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("完了") {
+                                showMetronomeSettings = false
+                            }
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
+        .fullScreenCover(isPresented: $showMetronomeView) {
+            NavigationStack {
+                if let settings = item.metronomeSettings {
+                    ZStack {
+                        Color(UIColor.systemBackground).ignoresSafeArea()
+                        
+                        VStack {
+                            Text(item.name)
+                                .font(.title)
+                                .padding()
+                            
+                            MetronomeView(settings: settings, engine: metronomeEngine, onSettingsChanged: { updatedSettings in
+                                updateMetronomeSettings(updatedSettings)
+                            })
+                        }
+                    }
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("完了") {
+                                metronomeEngine.stop()
+                                showMetronomeView = false
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     
     private func formattedDate(_ date: Date) -> String {
@@ -93,6 +194,17 @@ struct ItemDetailView: View {
     private func saveChanges() {
         item.name = editedName
         item.description = editedDescription
+        DataManager.shared.updateItem(item, context: modelContext)
+    }
+    
+    private func createMetronomeSettings() {
+        let settings = MetronomeSettings()
+        item.metronomeSettings = settings
+        DataManager.shared.updateItem(item, context: modelContext)
+    }
+    
+    private func updateMetronomeSettings(_ settings: MetronomeSettings) {
+        item.metronomeSettings = settings
         DataManager.shared.updateItem(item, context: modelContext)
     }
 } 

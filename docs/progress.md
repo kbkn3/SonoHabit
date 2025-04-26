@@ -21,10 +21,41 @@
    - `ItemDetailView`: 練習項目の詳細表示
    - `ItemEditView`: 練習項目の編集機能
 
+## 2024-05-11
+
+### フェーズ2: メトロノーム機能実装と連携
+
+#### 実装済み機能:
+
+1. **メトロノーム関連データモデル**
+   - `MetronomeSettings`: メトロノーム設定のデータモデル（BPM、拍子、小節数、アクセント、自動BPM上昇など）
+   - `PracticeItem`モデルとの関連付け
+
+2. **メトロノームエンジン**
+   - `MetronomeEngine`: AVFoundationを使用したメトロノーム基本機能
+   - 正確なタイミングでのビート生成
+   - アクセント機能
+   - BPM自動段階上昇機能
+
+3. **UI実装**
+   - `CommonButtons`: 再生/停止ボタン、数値調整ボタン、トグルスイッチなどの共通コンポーネント
+   - `MetronomeVisualizer`: 拍子に合わせた視覚的フィードバック
+   - `MetronomeView`: メトロノーム操作UI
+   - `ItemDetailView`の更新: メトロノーム設定の表示と編集
+   - `ItemEditView`の更新: メトロノーム設定の有効化/無効化処理
+
+#### 残課題:
+
+1. **メトロノーム音声ファイル**
+   - サンプルのクリック音を追加する必要あり
+
 #### 次のステップ:
 
-1. **フェーズ2: メトロノーム機能実装**
-   - `MetronomeSettings`: メトロノーム設定のデータモデル
-   - `MetronomeEngine`: AVFoundationを使用したメトロノーム基本機能
-   - `MetronomeView`: メトロノーム操作UI
-   - `PracticeItem`とメトロノーム設定の連携
+1. **フェーズ3: メトロノーム機能拡張**
+   - `MetronomeAccentService`: アクセントパターンのカスタマイズ
+   - `BpmProgressionService`: より高度なBPM変化パターン
+
+2. **フェーズ4: 録音機能実装**
+   - `RecordingInfo`: 録音情報モデル
+   - `AudioRecorder`: 録音機能
+   - 録音管理UI
